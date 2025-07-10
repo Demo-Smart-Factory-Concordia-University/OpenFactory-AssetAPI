@@ -1,2 +1,2 @@
-# OpenFactory-AssetAPI
-OpenFactory Serving Layer for Assets
+# OpenFactory-AssetAPI - Serving Layer for Assets
+OpenFactory-AssetAPI provides both state query and streaming endpoints for accessing real-time and computed data from Assets deployed on OpenFactory. It is the main serving layer for asset data within the OpenFactory platform.

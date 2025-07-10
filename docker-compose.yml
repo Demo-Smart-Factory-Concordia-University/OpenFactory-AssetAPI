@@ -1,0 +1,10 @@
+services:
+  asset-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ofa/asset-api
+    ports:
+      - "5555:5555"
+    environment:
+      - KSQLDB_URL=${KSQLDB_URL}
