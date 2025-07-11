@@ -1,3 +1,4 @@
 git+https://github.com/Demo-Smart-Factory-Concordia-University/OpenFactory.git
+sse-starlette
 fastapi
 uvicorn
