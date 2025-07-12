@@ -2,7 +2,7 @@
 import asyncio
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.core.kafka_dispatcher import start_kafka_dispatcher
+from app.core.kafka_dispatcher import start_kafka_dispatcher, KafkaDispatcher
 from app.api import asset_state
 from app.api import asset_stream
 
@@ -10,9 +10,12 @@ from app.api import asset_stream
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     loop = asyncio.get_running_loop()
-    start_kafka_dispatcher(loop)
-    yield
-    # Optionally: add any cleanup code here on shutdown
+    dispatcher: KafkaDispatcher = start_kafka_dispatcher(loop)
+    try:
+        yield
+    finally:
+        # Wait for dispatcher to stop cleanly
+        dispatcher.stop()
 
 app = FastAPI(lifespan=lifespan)
 

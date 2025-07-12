@@ -34,8 +34,7 @@ import threading
 import time
 from typing import DefaultDict, List
 from collections import defaultdict
-from confluent_kafka import Consumer
-from confluent_kafka import KafkaException
+from confluent_kafka import Consumer, KafkaException
 import os
 
 # Kafka config
@@ -84,46 +83,71 @@ def build_shared_consumer(topic: str) -> Consumer:
     return consumer
 
 
-def start_kafka_dispatcher(loop: asyncio.AbstractEventLoop):
+class KafkaDispatcher:
     """
-    Start the Kafka consumer dispatcher in a dedicated background thread.
-    This dispatcher continuously polls Kafka messages from the configured topic,
-    matches each message key against active subscription prefixes,
-    and dispatches matching messages asynchronously into the subscribers' queues.
+    KafkaDispatcher runs a background thread that polls Kafka and fans out messages
+    to asyncio queues for subscribed clients.
 
-    Args:
-        loop (asyncio.AbstractEventLoop): The asyncio event loop to schedule coroutine execution in.
+    Supports graceful shutdown to allow proper consumer group rebalancing.
     """
-    def run():
-        consumer = build_shared_consumer("enriched_assets_stream_topic")
-        print("[Kafka Dispatcher] Started Kafka consumer.")
-        try:
-            while True:
-                msg = consumer.poll(1.0)
-                if msg is None or msg.error():
-                    continue
-                try:
-                    key = msg.key().decode("utf-8") if msg.key() else ""
-                    value = msg.value().decode("utf-8")
 
-                    # Dispatch to all interested subscribers
-                    dispatched = False
-                    for prefix, queues in subscriptions.items():
-                        if key.startswith(prefix):
-                            for q in queues:
-                                asyncio.run_coroutine_threadsafe(q.put(value), loop)
-                            dispatched = True
+    def __init__(self, loop: asyncio.AbstractEventLoop):
+        self.loop = loop
+        self._stop_event = threading.Event()
+        self.consumer = None
+        self.thread = None
 
-                    # Commit only if the message was dispatched to any subscriber to ensure no message loss.
-                    # This means in rare crash scenarios, some messages may be re-delivered,
-                    # so clients should consider deduplication if needed.
-                    if dispatched:
-                        consumer.commit(message=msg, asynchronous=False)
+    def start(self):
+        """ Start the dispatcher background thread. """
+        def run():
+            self.consumer = build_shared_consumer("enriched_assets_stream_topic")
+            print("[Kafka Dispatcher] Started Kafka consumer.")
+            try:
+                while not self._stop_event.is_set():
+                    msg = self.consumer.poll(1.0)
+                    if msg is None or msg.error():
+                        continue
+                    try:
+                        key = msg.key().decode("utf-8") if msg.key() else ""
+                        value = msg.value().decode("utf-8")
 
-                except Exception as e:
-                    print(f"[Kafka Dispatcher] Error: {e}")
-        finally:
-            consumer.close()
-            print("[Kafka Dispatcher] Consumer closed.")
+                        dispatched = False
+                        for prefix, queues in subscriptions.items():
+                            if key.startswith(prefix):
+                                for q in queues:
+                                    asyncio.run_coroutine_threadsafe(q.put(value), self.loop)
+                                dispatched = True
 
-    threading.Thread(target=run, daemon=True).start()
+                        if dispatched:
+                            self.consumer.commit(message=msg, asynchronous=False)
+
+                    except Exception as e:
+                        print(f"[Kafka Dispatcher] Error: {e}")
+            finally:
+                print("[Kafka Dispatcher] Closing consumer...")
+                if self.consumer:
+                    self.consumer.close()
+                print("[Kafka Dispatcher] Consumer closed.")
+
+        self.thread = threading.Thread(target=run, daemon=True)
+        self.thread.start()
+
+    def stop(self):
+        """ Signal the dispatcher to stop and wait for clean shutdown. """
+        print("[Kafka Dispatcher] Stop signal received.")
+        self._stop_event.set()
+        if self.thread:
+            self.thread.join(timeout=10)
+        print("[Kafka Dispatcher] Stopped.")
+
+
+def start_kafka_dispatcher(loop: asyncio.AbstractEventLoop) -> KafkaDispatcher:
+    """
+    Convenience function to create and start KafkaDispatcher.
+
+    Returns:
+        KafkaDispatcher: The running dispatcher instance.
+    """
+    dispatcher = KafkaDispatcher(loop)
+    dispatcher.start()
+    return dispatcher
