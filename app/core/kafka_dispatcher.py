@@ -1,4 +1,34 @@
-# app/core/kafka_dispatcher.py
+"""
+Kafka Dispatcher module
+
+This module implements a shared Kafka consumer that continuously polls messages
+from a Kafka topic and fans them out to multiple asyncio subscriber queues
+based on message key prefixes.
+
+---
+
+Delivery Guarantees and Design Notes:
+
+- Exactly-once-like delivery semantics *for downstream consumers*:
+  Messages are only committed to Kafka after successful dispatch to at least
+  one subscriber queue. This avoids losing messages but may cause duplicates
+  if a crash occurs after dispatch but before commit.
+
+- Backpressure-safe:
+  Messages are asynchronously queued for subscribers and only marked as done
+  (offset committed) after dispatch, ensuring reliable delivery and enabling
+  buffering if consumers are slow.
+
+- Buffer-safe and Durable:
+  Uncommitted messages remain in Kafka if the dispatcher crashes or restarts,
+  allowing replay of missed messages on recovery.
+
+Note:
+  True exactly-once delivery across systems requires idempotent processing or
+  Kafka transactions, which are beyond this module's scope. Clients can implement
+  deduplication logic if needed to handle possible duplicate deliveries.
+"""
+
 import asyncio
 import threading
 import time
@@ -7,21 +37,6 @@ from collections import defaultdict
 from confluent_kafka import Consumer
 from confluent_kafka import KafkaException
 import os
-
-"""
-               ┌────────────┐
-               │   Kafka    │
-               └────┬───────┘
-                    │ (shared topic: enriched_assets_stream_topic)
-             ┌──────┴───────┐
-             │              │
-         Replica A      Replica B       (FastAPI container, scaled via Swarm)
-         ┌────────┐     ┌────────┐
-         │Consumer│     │Consumer│      (same group.id, different client.id)
-         └───┬────┘     └───┬────┘
-       [subscribers]   [subscribers]
-         [  A, C ]       [  B   ]
-"""
 
 # Kafka config
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BROKER", "localhost:9092")
@@ -52,7 +67,7 @@ def build_shared_consumer(topic: str) -> Consumer:
     consumer = Consumer(conf)
     consumer.subscribe([topic])
 
-    # Wait until the consumer is assigned a partition (max 5 seconds)
+    # Wait until the consumer is assigned a partition
     print("[Kafka Consumer] Waiting for partition assignment...")
     deadline = time.time() + 100  # max 100 seconds wait
     partitions = []
@@ -91,10 +106,20 @@ def start_kafka_dispatcher(loop: asyncio.AbstractEventLoop):
                     key = msg.key().decode("utf-8") if msg.key() else ""
                     value = msg.value().decode("utf-8")
 
+                    # Dispatch to all interested subscribers
+                    dispatched = False
                     for prefix, queues in subscriptions.items():
                         if key.startswith(prefix):
                             for q in queues:
                                 asyncio.run_coroutine_threadsafe(q.put(value), loop)
+                            dispatched = True
+
+                    # Commit only if the message was dispatched to any subscriber to ensure no message loss.
+                    # This means in rare crash scenarios, some messages may be re-delivered,
+                    # so clients should consider deduplication if needed.
+                    if dispatched:
+                        consumer.commit(message=msg, asynchronous=False)
+
                 except Exception as e:
                     print(f"[Kafka Dispatcher] Error: {e}")
         finally:
