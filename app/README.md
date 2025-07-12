@@ -6,7 +6,7 @@
                ┌────────────┐
                │   Kafka    │
                └────┬───────┘
-                    │ (shared topic: enriched_assets_stream_topic)
+                    │ (shared topic: ofa_assets)
              ┌──────┴───────┐
              │              │
          Replica A      Replica B       (FastAPI containers, scaled via Swarm)
