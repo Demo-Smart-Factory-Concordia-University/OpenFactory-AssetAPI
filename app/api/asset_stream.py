@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Query
 from sse_starlette.sse import EventSourceResponse
 from typing import Optional
 import asyncio
+import json
 from app.core.kafka_dispatcher import subscriptions
 
 router = APIRouter()
@@ -17,6 +18,7 @@ async def stream_asset_state(
     Stream real-time updates for a given asset (or specific DataItem).
 
     Streams messages from the enriched_assets_stream_topic Kafka topic via SSE.
+    Filters by DataItem ID if specified by the client.
 
     Args:
         request (Request): The incoming client request, used to detect disconnects.
@@ -25,24 +27,43 @@ async def stream_asset_state(
 
     Returns:
         SSE stream of JSON messages.
+
+    Examples:
+        Stream all DataItems for an asset:
+
+        ```
+        GET /asset_stream?asset_uuid=PROVER3018
+        ```
+
+        Stream only the DataItem with ID 'Zact' from a specific asset:
+
+        ```
+        GET /asset_stream?asset_uuid=PROVER3018&id=Zact
+        ```
     """
-    key_prefix = f"{asset_uuid}|{id}" if id else f"{asset_uuid}|"
     queue = asyncio.Queue()
-    subscriptions[key_prefix].append(queue)
-    print(f"[SSE] Client subscribed to {key_prefix}")
+    subscriptions[asset_uuid].append(queue)
+    print(f"[SSE] Client subscribed to {asset_uuid}")
 
     async def event_generator():
         try:
             while not await request.is_disconnected():
                 msg = await queue.get()
-                yield {
-                    "event": "asset_update",
-                    "data": msg
-                }
+                try:
+                    if id:
+                        parsed = json.loads(msg)
+                        if parsed.get("id") != id:
+                            continue  # skip non-matching ID
+                    yield {
+                        "event": "asset_update",
+                        "data": msg
+                    }
+                except Exception as e:
+                    print(f"[SSE] Failed to process message: {e}")
         finally:
-            subscriptions[key_prefix].remove(queue)
-            if not subscriptions[key_prefix]:
-                del subscriptions[key_prefix]
-            print(f"[SSE] Client disconnected from {key_prefix}")
+            subscriptions[asset_uuid].remove(queue)
+            if not subscriptions[asset_uuid]:
+                del subscriptions[asset_uuid]
+            print(f"[SSE] Client disconnected from {asset_uuid}")
 
     return EventSourceResponse(event_generator())

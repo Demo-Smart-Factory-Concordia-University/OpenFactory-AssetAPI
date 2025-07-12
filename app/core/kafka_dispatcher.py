@@ -40,6 +40,7 @@ import os
 # Kafka config
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BROKER", "localhost:9092")
 KAFKA_GROUP_ID = "openfactory-stream-api-shared"
+KAFKA_TOPIC = "ofa_assets"
 
 # Global subscription registry
 # Maps a key prefix (str) to a list of asyncio Queues corresponding to subscribers.
@@ -100,7 +101,7 @@ class KafkaDispatcher:
     def start(self):
         """ Start the dispatcher background thread. """
         def run():
-            self.consumer = build_shared_consumer("enriched_assets_stream_topic")
+            self.consumer = build_shared_consumer(KAFKA_TOPIC)
             print("[Kafka Dispatcher] Started Kafka consumer.")
             try:
                 while not self._stop_event.is_set():
@@ -108,17 +109,13 @@ class KafkaDispatcher:
                     if msg is None or msg.error():
                         continue
                     try:
-                        key = msg.key().decode("utf-8") if msg.key() else ""
+                        asset_uuid = msg.key().decode("utf-8") if msg.key() else ""
                         value = msg.value().decode("utf-8")
 
-                        dispatched = False
-                        for prefix, queues in subscriptions.items():
-                            if key.startswith(prefix):
-                                for q in queues:
-                                    asyncio.run_coroutine_threadsafe(q.put(value), self.loop)
-                                dispatched = True
-
-                        if dispatched:
+                        queues = subscriptions.get(asset_uuid)
+                        if queues:
+                            for q in queues:
+                                asyncio.run_coroutine_threadsafe(q.put(value), self.loop)
                             self.consumer.commit(message=msg, asynchronous=False)
 
                     except Exception as e:
