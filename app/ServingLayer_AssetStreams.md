@@ -161,7 +161,7 @@ Each derived topic feeds a dedicated FastAPI service group responsible for dispa
 * The single Kafka consumer service ensures ordered, exactly-once-consistent consumption from Kafka, while the pub/sub layer handles fan-out and load balancing.
 
 
-**Routing Layer Responsibilities:**
+## Routing Layer Responsibilities
 
 - On Startup:
 
