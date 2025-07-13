@@ -1,0 +1,17 @@
+# Docker Compose project for local development
+# Make sure the environment variable KAFKA_BROKER is set correctly and points to your Kafka cluster
+
+services:
+  stream_api_non_replicated:
+    build:
+      context: .
+    image: ofa/stream-api-non-replicated
+    ports:
+      - "5555:5555"
+    environment:
+      KAFKA_BROKER: ${KAFKA_BROKER}
+      KAFKA_TOPIC: "ofa_assets"
+      KAFKA_CONSUMER_GROUP_ID: "ofa_openfactory-stream-api-non-replicated-development"
+      QUEUE_MAXSIZE: 1000
+      LOG_LEVEL: "info"
+    restart: unless-stopped
