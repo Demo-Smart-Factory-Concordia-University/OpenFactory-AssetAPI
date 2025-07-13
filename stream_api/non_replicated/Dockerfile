@@ -2,7 +2,7 @@
 FROM python:3.12-slim
 
 # Arguments for non-root user creation
-ARG UNAME=asset_api
+ARG UNAME=stream_api
 ARG UID=1200
 ARG GID=1200
 
