@@ -1,0 +1,15 @@
+# Docker Compose project for local development
+# Make sure the environment variable KSQLDB_URL is set correctly and points to your ksqlDB server
+
+services:
+  state_api:
+    build:
+      context: .
+    image: ofa/state-api
+    ports:
+      - "5555:5555"
+    environment:
+      KSQLDB_URL: ${KSQLDB_URL}
+      KSQLDB_ASSETS_TABLE: "assets"
+      LOG_LEVEL: "info"
+    restart: unless-stopped

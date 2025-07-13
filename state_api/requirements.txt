@@ -1,0 +1,6 @@
+git+https://github.com/Demo-Smart-Factory-Concordia-University/OpenFactory.git
+pydantic>=2.0
+pydantic-settings>=2.0
+confluent-kafka
+fastapi
+uvicorn
