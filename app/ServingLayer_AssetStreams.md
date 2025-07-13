@@ -18,7 +18,7 @@ Each derived topic feeds a dedicated FastAPI service group responsible for dispa
 
 ```
                                     ┌──────────────────────┐
-                                    │    Original Topic    │
+                                    │     Assets Topic     │
                                     │      ofa_assets      │
                                     └─────────┬────────────┘
                                               │
@@ -55,7 +55,7 @@ Each derived topic feeds a dedicated FastAPI service group responsible for dispa
 ```
 ### Description
 
-* All Asset events are published to a single Kafka topic, ofa_assets, by OpenFactory's stream layer.
+* All Asset events are published to a single Kafka topic, `ofa_assets`, by OpenFactory's stream layer.
 * Using **ksqlDB or Kafka Streams**, this topic is **split into multiple derived topics**, each filtered and partitioned by Asset attribute (e.g., `workcenter`):
 
   * Example derived topics:
