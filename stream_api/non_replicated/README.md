@@ -51,17 +51,20 @@ It is designed for **simple, reliable, low-latency deployments** with **no horiz
 
 ### `GET /asset_stream`
 
-Streams real-time Asset events via Server-Sent Events (SSE).
+Stream real-time events from a specific Asset (or one of its DataItems) via Server-Sent Events (SSE).
 
 #### Query Parameters:
 
-* `asset_uuid` (required): The UUID of the Asset to subscribe to.
-* `id` (optional): The ID of a specific DataItem within the Asset. When provided, only events related to this DataItem will be streamed.
+| Parameter    | Type   | Description                                                                                          | Required |
+| ------------ | ------ | ---------------------------------------------------------------------------------------------------- | -------- |
+| `asset_uuid` | string | UUID of the Asset to subscribe to.                                                                   | ✅ Yes   |
+| `id`         | string | Optional DataItem ID. When provided, only events related to this specific DataItem will be streamed. | ❌ No    |
 
 #### Response:
 
 * MIME type: `text/event-stream`
-* Stream of JSON-formatted events. Each message corresponds to an Asset update.
+* Continuous stream of newline-delimited, JSON-formatted events
+* Each event corresponds to a real-time update from the Asset
 
 #### Examples
 

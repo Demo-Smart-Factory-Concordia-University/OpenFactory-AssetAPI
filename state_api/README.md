@@ -61,6 +61,20 @@ Fetch the current state of an Asset or one of its DataItems.
   * A single DataItem state (when `id` is specified), or
   * A list of all DataItems for the asset.
 
+#### Examples
+
+Get state for a specific DataItem (`avail`):
+
+```
+GET /asset_state?asset_uuid=WTVB01-001&id=avail
+```
+
+Get all DataItems for an asset:
+
+```
+GET /asset_state?asset_uuid=WTVB01-001
+```
+
 ---
 
 ## ⚙️ Environment Configuration
