@@ -36,7 +36,7 @@ Note:
     before starting the application.
 """
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
@@ -79,6 +79,15 @@ class Settings(BaseSettings):
         "extra": "ignore",
     }
 
+    @field_validator("log_level")
+    @classmethod
+    def validate_log_level(cls, v):
+        allowed = {"debug", "info", "warning", "error", "critical"}
+        if v.lower() not in allowed:
+            raise ValueError(f"log_level must be one of {allowed}")
+        return v.lower()
+
 
 # Singleton settings object
 settings = Settings()
+print(settings)
