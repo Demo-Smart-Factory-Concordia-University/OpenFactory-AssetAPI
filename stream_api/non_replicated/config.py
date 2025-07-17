@@ -1,6 +1,6 @@
 """
-Configuration Module
-====================
+Stream API Configuration Module
+===============================
 
 This module defines the configuration settings for the non-replicated streaming API service.
 

@@ -1,6 +1,6 @@
 """
-Configuration Module
-====================
+State API Configuration Module
+==============================
 
 This module defines the configuration settings for the Asset state API service.
 
