@@ -69,6 +69,7 @@ def build_shared_consumer(topic: str, consumer_group_id: str) -> Consumer:
     }
     consumer = Consumer(conf)
     consumer.subscribe([topic])
+    logger.info(f"[Kafka Consumer] Subscribe to {topic} at {KAFKA_BOOTSTRAP_SERVERS}")
 
     # Wait until the consumer is assigned a partition
     logger.info("[Kafka Consumer] Waiting for partition assignment...")
@@ -81,7 +82,7 @@ def build_shared_consumer(topic: str, consumer_group_id: str) -> Consumer:
             break
 
     if not partitions:
-        raise KafkaException("Kafka consumer failed to get partition assignment.")
+        raise KafkaException("[Kafka Consumer] failed to get partition assignment.")
 
     logger.info(f"[Kafka Consumer] Assigned partitions: {partitions}")
     return consumer
