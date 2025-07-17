@@ -76,6 +76,18 @@ class GroupingStrategy(ABC):
         """
         raise NotImplementedError("get_all_groups must be implemented by subclasses.")
 
+    def _get_stream_name(self, group_name: str) -> str:
+        """
+        Compute the name of the derived stream for the given group.
+
+        Args:
+            group_name (str): The group name.
+
+        Returns:
+            str: The corresponding stream name.
+        """
+        return f"asset_stream_{group_name}"
+
     @abstractmethod
     def create_derived_stream(self, group_name: str) -> None:
         """
@@ -188,18 +200,6 @@ class UNSLevelGroupingStrategy(GroupingStrategy):
             logger.error(f"Error querying all assets from group {group_name}: {e}")
             return []
 
-    def _get_stream_name(self, group_name: str) -> str:
-        """
-        Compute the name of the derived stream for the given group.
-
-        Args:
-            group_name (str): The group name.
-
-        Returns:
-            str: The corresponding stream name.
-        """
-        return f"asset_stream_{group_name}"
-
     def create_derived_stream(self, group_name: str) -> None:
         """
         Create a derived stream for the specified group using a ksqlDB query.
@@ -218,7 +218,11 @@ class UNSLevelGroupingStrategy(GroupingStrategy):
         # WHERE asset_uuid IN ({formatted_assets});
         # """
         statement = f"""
-        CREATE STREAM IF NOT EXISTS {self._get_stream_name(group_name)} AS
+        CREATE STREAM IF NOT EXISTS {self._get_stream_name(group_name)}
+           WITH (
+             KAFKA_TOPIC='{self._get_stream_name(group_name)}_topic',
+             VALUE_FORMAT='JSON'
+           ) AS
         SELECT s.*
         FROM {settings.ksqldb_assets_stream} s
         JOIN asset_to_uns_map h
