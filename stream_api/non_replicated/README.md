@@ -88,7 +88,7 @@ This service is configured via environment variables:
 
 | Variable                  | Description                                 | Required |
 |---------------------------|---------------------------------------------|----------|
-| `KAFKA_BOOTSTRAP`         | Kafka broker address                        | ✅ Yes   |
+| `KAFKA_BROKER`            | Kafka broker address                        | ✅ Yes   |
 | `KAFKA_TOPIC`             | Kafka topic to consume from                 | ✅ Yes   |
 | `KAFKA_CONSUMER_GROUP_ID` | Kafka consumer group ID                     | ✅ Yes   |
 | `QUEUE_MAXSIZE`           | Max in-memory queue size                    | ❌ No    |
