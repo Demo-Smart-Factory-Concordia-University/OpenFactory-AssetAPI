@@ -33,7 +33,7 @@ logger = logging.getLogger("uvicorn.error")
 router = APIRouter()
 
 
-@router.get("/asset_stream", tags=["Asset Stream"])
+@router.get("/asset_stream", tags=["Asset Stream"], response_model=None)
 async def route_asset_stream(request: Request, asset_uuid: str) -> Union[StreamingResponse, JSONResponse]:
     """
     Route client requests for asset data streams.
