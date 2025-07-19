@@ -31,7 +31,7 @@ import asyncio
 import logging
 import threading
 import time
-from typing import DefaultDict, List
+from typing import DefaultDict, List, Tuple
 from collections import defaultdict
 from confluent_kafka import Consumer, KafkaException
 from stream_api.non_replicated.config import settings
@@ -140,6 +140,29 @@ class KafkaDispatcher:
         if self.thread:
             self.thread.join(timeout=10)
         logger.info("[Kafka Dispatcher] Stopped.")
+
+    def is_kafka_connected(self) -> Tuple[bool, str]:
+        """
+        Check whether the Kafka dispatcher is connected and assigned partitions.
+
+        This method verifies that:
+        - The dispatcher thread is running.
+        - The Kafka consumer has been initialized.
+        - The consumer has received partition assignments from the broker.
+
+        Returns:
+            Tuple: A tuple where the first element is True if Kafka is connected and assigned,
+                   False otherwise. The second element is a string describing the readiness state
+                   or the failure reason.
+        """
+        if not self.thread or not self.thread.is_alive():
+            return False, "Kafka dispatcher thread is not running"
+        if not self.consumer:
+            return False, "Kafka consumer is not initialized"
+        partitions = self.consumer.assignment()
+        if not partitions:
+            return False, "Kafka consumer has no assigned partitions (no connection?)"
+        return True, "Kafka is reachable and consumer has partitions assigned"
 
 
 def start_kafka_dispatcher(loop: asyncio.AbstractEventLoop) -> KafkaDispatcher:
