@@ -103,8 +103,9 @@ async def readiness_check():
         - Deployment platform readiness (e.g., Docker Swarm manager availability)
 
     Returns:
-        - 200 OK with {"status": "ready"} if ready.
-        - 503 Service Unavailable with issues listed if not ready.
+        Dict: A dictionary indicating readiness status.
+              If ready, returns {"status": "ready"} with HTTP 200.
+              If not ready, returns HTTP 503 with content {"status": "not ready", "issues": <message>}.
     """
     ready, issues = routing_controller.is_ready()
     if not ready:
