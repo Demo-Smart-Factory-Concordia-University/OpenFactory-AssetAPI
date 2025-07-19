@@ -163,24 +163,22 @@ Each derived topic feeds a dedicated FastAPI service group responsible for dispa
 
 ## Routing Layer Responsibilities
 
-- On Startup:
+### On Startup
 
-    * **Generate derived Kafka streams/topics** using `ksqlDB` or Kafka Streams based on `workcenter` or other partitioning logic.
+* **Generate derived Kafka streams/topics** based on group metadata (e.g., workcenter).
 
-      ```sql
-      CREATE STREAM asset_stream_WeldingCell03 AS
-          SELECT * FROM ofa_assets
-          PARTITION BY attributes['workcenter']
-          WHERE attributes['workcenter'] = 'WeldingCell03';
-      ```
-    * Do this for **each group (workcenter)** your system supports.
+* **Deploy group-specific FastAPI services** using Docker Swarm.
 
-- At Runtime:
+  * For each active group, ensure a corresponding service is running.
+  * Services are configured with environment variables to consume their group-specific Kafka stream.
 
-    * On client call to `/asset_stream?asset_uuid=...`:
+* **Maintain a registry mapping groups to service endpoints** to facilitate routing.
 
-    * Lookup group (e.g., "Weld") from `/asset_state?...id=workcenter`.
-    * Redirect or proxy request to `/group/Weld/asset_stream?...`.
+### At Runtime
+
+* **Handle client requests** for asset data by determining the asset’s group.
+* **Ensure group service availability**, deploying on demand if necessary.
+* **Proxy client requests transparently** to the appropriate group-specific service endpoint.
 
 
 ## Failure & Rebalance Behavior
