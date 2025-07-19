@@ -32,6 +32,7 @@ Environment Variables:
     - `FASTAPI_GROUP_CPU_RESERVATION`: CPU reservation per group service (default: 0.5)
     - `FASTAPI_GROUP_PORT_BASE`: Base host port to expose group services in local dev (default: 6000)
     - `ENVIRONMENT`: Current environment, either "local" or "production" (default: "production")
+    - `SWARM_NODE_HOST`: Host or IP address of the Swarm manager node (default: "localhost")
     - `LOG_LEVEL`: Logging level ("debug", "info", "warning", "error", "critical"; default: "info")
 """
 import logging
