@@ -124,4 +124,10 @@ class RoutingController:
         if not deployment_ready:
             issues["deployment_platform"] = deployment_msg
 
+        # Check readiness status of deployed services
+        for group in self.grouping_strategy.get_all_groups():
+            healthy, msg = self.deployment_platform.check_service_ready(group)
+            if not healthy:
+                issues[f"service:{group}"] = msg
+
         return (len(issues) == 0, issues)

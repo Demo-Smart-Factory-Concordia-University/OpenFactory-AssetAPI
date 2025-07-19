@@ -20,6 +20,7 @@ Note:
 import logging
 import re
 import hashlib
+import httpx
 from typing import Tuple
 from abc import ABC, abstractmethod
 from docker import DockerClient
@@ -98,6 +99,64 @@ class DeploymentPlatform(ABC):
             or error.
         """
         raise NotImplementedError("is_ready() must be implemented by subclasses.")
+
+    def check_service_ready(self, group_name: str) -> Tuple[bool, str]:
+        """
+        Check whether the service for the specified group is ready to accept requests.
+
+        Sends an HTTP GET request to the `/ready` endpoint of the service URL returned
+        by `get_service_url()`.
+
+        The readiness endpoint should return a JSON object like:
+
+        .. code-block:: json
+
+            {
+                "ready": true,
+                "issues": {}
+            }
+            or
+            {
+                "ready": false,
+                "issues": {
+                    "database": "connection timeout"
+                }
+            }
+
+        Args:
+            group_name (str): The name of the group.
+
+        Returns:
+            Tuple[bool, str]: True if the service is ready, False otherwise.
+            The message will be "Service is ready" or a formatted string listing issues.
+
+        Note:
+            Can be overridden if the deployed services provide different mechanisms to
+            communicate their ready state.
+        """
+        try:
+            url = self.get_service_url(group_name)
+            readiness_url = f"{url.rstrip('/')}/ready"
+            response = httpx.get(readiness_url, timeout=2.0)
+            if response.status_code == 404:
+                return False, "Service does not expose a /ready endpoint (404 Not Found)"
+            if response.status_code != 200:
+                return False, f"Received status code {response.status_code}"
+
+            data = response.json()
+            ready = data.get("ready")
+            issues = data.get("issues", {})
+
+            if ready is True and not issues:
+                return True, "Service is ready"
+            else:
+                issues_str = "; ".join(f"{k}: {v}" for k, v in issues.items())
+                return False, f"Service readiness check failed: {issues_str or 'unknown issues'}"
+        except httpx.RequestError as e:
+            # Covers connection errors, DNS issues, timeouts, etc.
+            return False, f"Service is not reachable: {e}"
+        except Exception as e:
+            return False, f"Unexpected error while checking readiness: {e}"
 
     def _get_host_port(self, group_name: str) -> int:
         """
