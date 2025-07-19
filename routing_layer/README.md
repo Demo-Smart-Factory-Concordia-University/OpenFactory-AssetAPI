@@ -45,22 +45,70 @@ The Routing Layer manages asset grouping, stream generation, and deployment of g
 ## Additional Details
 
 * **Grouping strategy**
-
   * The `UNSLevelGroupingStrategy` is used to assign assets to groups based on a configurable UNS level.
   * Group membership and group lists are dynamically queried from ksqlDB.
 
 * **Stream management**
-
   * Derived streams filter the master asset stream using UNS attributes, ensuring data isolation per group.
 
 * **Deployment abstraction**
-
   * The deployment platform interface supports multiple backends; currently, Docker Swarm is implemented.
 
 * **Security**
-
   * All dynamic ksqlDB queries sanitize input values to prevent injection attacks.
 
 * **Configuration**
-
   * Deployment settings, Kafka brokers, ksqlDB URLs, and Docker image names are managed centrally in the shared `settings` module.
+
+
+## ⚙️ Environment Configuration
+
+Configured via environment variables (typically via a shared `.env` file):
+
+| Variable               | Description                                                     | Required                                            |
+| ---------------------- | --------------------------------------------------------------- | --------------------------------------------------- |
+| `KSQLDB_URL`           | URL of the ksqlDB server (e.g., `http://localhost:8088`)        | ✅ Yes                                              |
+| `KSQLDB_ASSETS_STREAM` | Name of the ksqlDB stream with enriched asset data              | ❌ No (default: `enriched_assets_stream`)           |
+| `KSQLDB_UNS_MAP`       | Name of the ksqlDB table mapping assets to UNS hierarchy        | ❌ No (default: `asset_to_uns_map`)                 |
+| `DOCKER_NETWORK`       | Docker Swarm overlay network name                               | ❌ No (default: `factory-net`)                      |
+| `FASTAPI_GROUP_IMAGE`  | Docker image for group services                                 | ❌ No (default: `openfactory/fastapi-group:latest`) |
+| `LOG_LEVEL`            | Logging level (`debug`, `info`, `warning`, `error`, `critical`) | ❌ No (default: `info`)                             |
+
+All of these can be placed in a `.env` file at the project root for development convenience.
+
+---
+
+## 🐳 Running Locally
+
+To start the **Routing Layer** FastAPI app locally:
+
+```bash
+python -m routing_layer.app.main
+```
+
+To run it in Docker (e.g., for local Swarm testing):
+
+```bash
+docker build -t openfactory/routing-layer .
+docker swarm init  # if not already initialized
+docker service create \
+  --name routing-layer \
+  --network factory-net \
+  --mount type=bind,src=$(pwd)/.env,dst=/app/.env \
+  openfactory/routing-layer
+```
+
+## 🔧 Development Structure
+
+```bash
+routing_layer/
+├── app/
+│   ├── config.py                        # Environment and ksqlDB client
+│   ├── main.py                          # FastAPI app with lifespan controller
+│   └── core/
+│       ├── controller/
+│       │   ├── grouping_strategy.py     # Abstract & UNS-based grouping
+│       │   ├── deployment_platform.py   # Abstract & Swarm-based deployment
+│       │   └── routing_controller.py    # Orchestrates grouping + deployment
+└── README.md                            # This file
+```

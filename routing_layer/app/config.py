@@ -30,6 +30,8 @@ Environment Variables:
     - `FASTAPI_GROUP_REPLICAS`: Number of service replicas per group (default: 3)
     - `FASTAPI_GROUP_CPU_LIMIT`: CPU limit per group service (default: 1)
     - `FASTAPI_GROUP_CPU_RESERVATION`: CPU reservation per group service (default: 0.5)
+    - `FASTAPI_GROUP_PORT_BASE`: Base host port to expose group services in local dev (default: 6000)
+    - `ENVIRONMENT`: Current environment, either "local" or "production" (default: "production")
     - `LOG_LEVEL`: Logging level ("debug", "info", "warning", "error", "critical"; default: "info")
 """
 import logging
@@ -61,8 +63,14 @@ class Settings(BaseSettings):
             Environment variable: `FASTAPI_GROUP_CPU_LIMIT`. Default: 1.
         fastapi_group_cpus_reservation (float): CPU reservation per group container.
             Environment variable: `FASTAPI_GROUP_CPU_RESERVATION`. Default: 0.5.
+        fastapi_group_host_port_base (int): Base host port to publish services for local development.
+            Environment variable: `FASTAPI_GROUP_PORT_BASE`. Default: 6000.
         log_level (str): Logging verbosity level for the service.
             Environment variable: `LOG_LEVEL`. Default: "info".
+        environment (str): Environment the app is running in ("local" or "production").
+            Environment variable: `ENVIRONMENT`. Default: "production".
+        swarm_node_host (str): Host or IP address of the Swarm manager node (used for local proxying).
+            Environment variable: `SWARM_NODE_HOST`. Default: "localhost".
     """
     kafka_broker: str = Field(default="localhost:9092", env="KAFKA_BROKER")
     ksqldb_url: str = Field(default="http://localhost:8088", env="KSQLDB_URL")
@@ -73,7 +81,10 @@ class Settings(BaseSettings):
     fastapi_group_replicas: int = Field(default=3, env="FASTAPI_GROUP_REPLICAS")
     fastapi_group_cpus_limit: float = Field(default=1, env="FASTAPI_GROUP_CPU_LIMIT")
     fastapi_group_cpus_reservation: float = Field(default=0.5, env="FASTAPI_GROUP_CPU_RESERVATION")
+    fastapi_group_host_port_base: int = Field(default=6000, env="FASTAPI_GROUP_PORT_BASE")
     log_level: str = Field(default="info", env="LOG_LEVEL")
+    environment: str = Field(default="production", env="ENVIRONMENT")
+    swarm_node_host: str = Field(default="localhost", env="SWARM_NODE_HOST")
 
     model_config = {
         "env_file": ".env",
@@ -90,6 +101,14 @@ class Settings(BaseSettings):
             raise ValueError(f"log_level must be one of {allowed}")
         logging.getLogger("uvicorn.error").setLevel(level.upper())
         return level
+
+    @field_validator("environment")
+    @classmethod
+    def validate_environment(cls, v):
+        allowed = {"local", "production"}
+        if v.lower() not in allowed:
+            raise ValueError(f"environment must be one of {allowed}")
+        return v.lower()
 
 
 # Singleton settings object

@@ -23,7 +23,7 @@ Note:
 
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from routing_layer.app.config import settings, ksql
 from openfactory.assets import Asset
 
@@ -120,6 +120,21 @@ class GroupingStrategy(ABC):
         """
         raise NotImplementedError("remove_derived_stream must be implemented by subclasses.")
 
+    @abstractmethod
+    def is_ready(self) -> Tuple[bool, str]:
+        """
+        Check if the grouping strategy is ready to be used.
+
+        This should verify critical dependencies (e.g., connection to ksqlDB,
+        ability to query group data, etc.).
+
+        Returns:
+            A tuple where the first element is a boolean indicating readiness,
+            and the second element is a diagnostic message describing the status
+            or the reason for not being ready.
+        """
+        raise NotImplementedError("is_ready must be implemented by subclasses.")
+
 
 class UNSLevelGroupingStrategy(GroupingStrategy):
     """
@@ -135,9 +150,37 @@ class UNSLevelGroupingStrategy(GroupingStrategy):
 
         Args:
             grouping_level (str): The UNS level (e.g., 'workcenter', 'area') to use as the grouping key.
+
+        Raises:
+            RuntimeError: If the required UNS mapping table is not found or ksqlDB is unreachable.
         """
         self.grouping_level = escape_ksql_literal(grouping_level)
+
+        ready, reason = self.is_ready()
+        if not ready:
+            raise RuntimeError(f"UNSLevelGroupingStrategy initialization failed: {reason}")
         # TODO: validate grouping_level is actually part of UNS
+
+    def is_ready(self) -> Tuple[bool, str]:
+        """
+        Check if the grouping strategy is ready.
+
+        This method verifies that the configured UNS mapping table exists in ksqlDB,
+        ensuring the strategy can operate properly.
+
+        Returns:
+            A tuple where the first element is a boolean indicating readiness,
+            and the second element is a diagnostic message explaining the status
+            or error.
+        """
+        try:
+            expected_table = settings.ksqldb_uns_map.upper()
+            actual_tables = [t.upper() for t in ksql.tables()]
+            if expected_table not in actual_tables:
+                return False, f"UNS mapping table '{settings.ksqldb_uns_map}' not found in ksqlDB"
+            return True, "ok"
+        except Exception as e:
+            return False, f"ksqlDB connection failed: {str(e)}"
 
     def get_group_for_asset(self, asset_uuid: str) -> Optional[str]:
         """
@@ -210,13 +253,6 @@ class UNSLevelGroupingStrategy(GroupingStrategy):
         Returns:
             None
         """
-        # assets = self.get_all_assets_in_group(group_name)
-        # formatted_assets = ", ".join(f"'{asset}'" for asset in assets)
-        # statement = f"""
-        # CREATE STREAM IF NOT EXISTS {self._get_stream_name(group_name)} AS
-        # SELECT * FROM {settings.ksqldb_assets_stream}
-        # WHERE asset_uuid IN ({formatted_assets});
-        # """
         statement = f"""
         CREATE STREAM IF NOT EXISTS {self._get_stream_name(group_name)}
            WITH (

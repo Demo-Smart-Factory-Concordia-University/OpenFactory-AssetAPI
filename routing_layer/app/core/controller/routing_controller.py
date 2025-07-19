@@ -10,7 +10,7 @@ grouping strategies and deployment platforms. It is responsible for:
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Tuple, Dict
 from routing_layer.app.core.controller.grouping_strategy import GroupingStrategy
 from routing_layer.app.core.controller.deployment_platform import DeploymentPlatform
 
@@ -90,3 +90,38 @@ class RoutingController:
         self.grouping_strategy.create_derived_stream(group)
         self.deployment_platform.deploy_service(group)
         return self.deployment_platform.get_service_url(group)
+
+    def is_ready(self) -> Tuple[bool, Dict[str, str]]:
+        """
+        Check the readiness status of the routing controller and its subcomponents.
+
+        This method verifies whether the routing layer is ready to handle incoming requests
+        by checking both the grouping strategy and the deployment platform. Each subcomponent's
+        readiness is determined by calling its own `is_ready()` method, which returns a tuple
+        of (bool, str) — indicating readiness and an optional diagnostic message.
+
+        Returns:
+            Tuple: A tuple where the first element is a boolean indicating
+            overall readiness, and the second element is a dictionary mapping component
+            names (e.g., "grouping_strategy") to diagnostic messages if not ready.
+
+        Example:
+        .. code-block:: python
+
+            (True, {})
+            (False, {
+                "grouping_strategy": "ksqlDB unreachable",
+                "deployment_platform": "Docker not reachable"
+            })
+        """
+        issues = {}
+
+        grouping_ready, grouping_msg = self.grouping_strategy.is_ready()
+        if not grouping_ready:
+            issues["grouping_strategy"] = grouping_msg
+
+        deployment_ready, deployment_msg = self.deployment_platform.is_ready()
+        if not deployment_ready:
+            issues["deployment_platform"] = deployment_msg
+
+        return (len(issues) == 0, issues)
