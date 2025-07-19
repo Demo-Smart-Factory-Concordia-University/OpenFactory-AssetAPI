@@ -112,12 +112,12 @@ class DeploymentPlatform(ABC):
         .. code-block:: json
 
             {
-                "ready": true,
+                "status": "ready",
                 "issues": {}
             }
             or
             {
-                "ready": false,
+                "status": "not ready",
                 "issues": {
                     "database": "connection timeout"
                 }
@@ -127,8 +127,8 @@ class DeploymentPlatform(ABC):
             group_name (str): The name of the group.
 
         Returns:
-            Tuple[bool, str]: True if the service is ready, False otherwise.
-            The message will be "Service is ready" or a formatted string listing issues.
+            Tuple: A tuple where the first element is True if the service is ready, False otherwise.
+                   The second element is a message string summarizing the issue.
 
         Note:
             Can be overridden if the deployed services provide different mechanisms to
@@ -144,10 +144,10 @@ class DeploymentPlatform(ABC):
                 return False, f"Received status code {response.status_code}"
 
             data = response.json()
-            ready = data.get("ready")
+            status = data.get("status")
             issues = data.get("issues", {})
 
-            if ready is True and not issues:
+            if status == 'ready':
                 return True, "Service is ready"
             else:
                 issues_str = "; ".join(f"{k}: {v}" for k, v in issues.items())
@@ -333,5 +333,5 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
         if settings.environment == "local":
             logger.info("Using local override for target URL")
             host_port = self._get_host_port(group_name)
-            return f"http://{settings.swarm_node_host}:{host_port}/asset_stream"
-        return f"http://{self._service_name(group_name)}:5555/asset_stream"
+            return f"http://{settings.swarm_node_host}:{host_port}"
+        return f"http://{self._service_name(group_name)}:5555"

@@ -66,7 +66,7 @@ async def route_asset_stream(request: Request, asset_uuid: str) -> Union[Streami
     filtered_params = {k: v for k, v in request.query_params.items() if k in allowed_params}
 
     query_string = urlencode(filtered_params)
-    full_url = f"{target_url}?{query_string}" if query_string else target_url
+    full_url = f"{target_url}/asset_stream?{query_string}" if query_string else target_url
 
     # Call proxy_request to stream upstream response
     try:
