@@ -21,16 +21,12 @@ Raises:
     docker.errors.DockerException: If Docker is not available or misconfigured.
 """
 
-import docker
 from routing_layer.app.core.controller.routing_controller import RoutingController
 from routing_layer.app.core.controller.grouping_strategy import UNSLevelGroupingStrategy
 from routing_layer.app.core.controller.deployment_platform import SwarmDeploymentPlatform
 
-# Initialize Docker client using environment configuration
-docker_client = docker.from_env()
-
 # Instantiate the routing controller with default grouping strategy and deployment backend
 routing_controller = RoutingController(
     grouping_strategy=UNSLevelGroupingStrategy(grouping_level='workcenter'),
-    deployment_platform=SwarmDeploymentPlatform(docker_client=docker_client),
+    deployment_platform=SwarmDeploymentPlatform(),
 )
