@@ -57,6 +57,7 @@ async def asset_stream_proxy(request: Request, full_url: str) -> StreamingRespon
         GET /asset_stream?asset_uuid=...
     """
     async def sse_stream():
+        logger.debug(f"[proxy] Will forward to {full_url}")
         async with httpx.AsyncClient(timeout=None) as client:
             try:
                 async with client.stream("GET", full_url, headers={"Accept": "text/event-stream"}) as response:
