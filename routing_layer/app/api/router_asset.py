@@ -53,7 +53,7 @@ async def route_asset_stream(request: Request, asset_uuid: str) -> Union[Streami
     Returns:
         StreamingResponse: A streamed response proxying data from the downstream service.
     """
-    logger.info(f"[router] Received asset_uuid: {asset_uuid}")
+    logger.debug(f"[router] Received asset_uuid: {asset_uuid}")
 
     # Resolve target base URL from routing controller
     target_url = routing_controller.handle_client_request(asset_uuid)
