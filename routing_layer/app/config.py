@@ -26,6 +26,7 @@ Environment Variables:
     - `KSQLDB_ASSETS_STREAM`: Name of the enriched asset stream (default: "enriched_assets_stream")
     - `KSQLDB_UNS_MAP`: Name of the UNS map table in ksqlDB (default: "asset_to_uns_map")
     - `DOCKER_NETWORK`: Docker Swarm overlay network name (default: "factory-net")
+    - `ROUTING_LAYER_IMAGE`: Docker image of the central routing layer API
     - `FASTAPI_GROUP_IMAGE`: Docker image for group service containers (default: "openfactory/fastapi-group:latest")
     - `FASTAPI_GROUP_REPLICAS`: Number of service replicas per group (default: 3)
     - `FASTAPI_GROUP_CPU_LIMIT`: CPU limit per group service (default: 1)
@@ -56,6 +57,8 @@ class Settings(BaseSettings):
             Environment variable: `KSQLDB_UNS_MAP`. Default: "asset_to_uns_map".
         docker_network (str): Docker Swarm network used for deploying group services.
             Environment variable: `DOCKER_NETWORK`. Default: "factory-net".
+        routing_layer_image (str): Docker image of the central routing layer API.
+            Environment variable: `ROUTING_LAYER_IMAGE`. Default: "ofa/routing-layer".
         fastapi_group_image (str): Docker image to use for group service containers.
             Environment variable: `FASTAPI_GROUP_IMAGE`. Default: "openfactory/fastapi-group:latest".
         fastapi_group_replicas (int): Number of service replicas per group.
@@ -78,6 +81,7 @@ class Settings(BaseSettings):
     ksqldb_assets_stream: str = Field(default="enriched_assets_stream", env="KSQLDB_ASSETS_STREAM")
     ksqldb_uns_map: str = Field(default="asset_to_uns_map", env="KSQLDB_UNS_MAP")
     docker_network: str = Field(default="factory-net", env="DOCKER_NETWORK")
+    routing_layer_image: str = Field(default="ofa/routing-layer", env="ROUTING_LAYER_IMAGE")
     fastapi_group_image: str = Field(default="openfactory/fastapi-group:latest", env="FASTAPI_GROUP_IMAGE")
     fastapi_group_replicas: int = Field(default=3, env="FASTAPI_GROUP_REPLICAS")
     fastapi_group_cpus_limit: float = Field(default=1, env="FASTAPI_GROUP_CPU_LIMIT")
@@ -106,7 +110,7 @@ class Settings(BaseSettings):
     @field_validator("environment")
     @classmethod
     def validate_environment(cls, v):
-        allowed = {"local", "production"}
+        allowed = {"local", "devswarm", "production"}
         if v.lower() not in allowed:
             raise ValueError(f"environment must be one of {allowed}")
         return v.lower()

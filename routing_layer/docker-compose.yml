@@ -1,0 +1,51 @@
+# ------------------------------------------------------------------------------
+# 🐳 Docker Compose for Development in Swarm Environment (`devswarm` mode)
+#
+# This configuration runs the OpenFactory Routing Layer API in a local container,
+# while all group-specific services are deployed as Docker Swarm services.
+#
+# Purpose:
+#   - Allows full-stack development and integration testing
+#   - Keeps the API container outside of Swarm but connected to the Swarm overlay network
+#   - Simplifies testing routing and streaming behavior in near-production conditions
+#
+# Key Details:
+#   - ENVIRONMENT=devswarm enables Swarm-style service discovery and deployment logic
+#   - Overlay network `factory-net` must already exist (use `docker network create`)
+#   - Routing layer API binds to port 5555 on the host for easy local access
+#
+# Requirements:
+#   - OpenFactory Swarm cluster up and running
+#   - Overlay network `factory-net`: the overlay network of the OpenFactory cluster
+#   - Set required environment variables (KSQLDB_URL, KAFKA_BROKER)
+#   - group-specific infrastructure deployed on cluster
+#     (using python -m routing_layer.manage deploy)
+# ------------------------------------------------------------------------------
+
+services:
+  routing-layer:
+    build:
+      context: .
+    image: ofa/routing-layer
+    ports:
+      - "5555:5555"
+    environment:
+      KSQLDB_URL: ${KSQLDB_URL}
+      KAFKA_BROKER: ${KAFKA_BROKER}
+      KSQLDB_ASSETS_STREAM: "enriched_assets_stream"
+      KSQLDB_UNS_MAP: "asset_to_uns_map"
+      FASTAPI_GROUP_IMAGE: "ofa/stream-api-non-replicated"
+      FASTAPI_GROUP_REPLICAS: 1
+      FASTAPI_GROUP_CPU_LIMIT: 1
+      FASTAPI_GROUP_CPU_RESERVATION: 0.5
+      FASTAPI_GROUP_PORT_BASE: 6000
+      LOG_LEVEL: "info"
+      ENVIRONMENT: "devswarm"
+      SWARM_NODE_HOST: "localhost"
+    networks:
+      - factory-net
+
+networks:
+  factory-net:
+    name: factory-net
+    external: true
