@@ -76,8 +76,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(
     title="OpenFactory API Routing Layer",
-    description="Routing layer for the OpenFactory serving layer",
-    lifespan=lifespan
+    description="Routing layer for the OpenFactory serving layer"
 )
 
 
