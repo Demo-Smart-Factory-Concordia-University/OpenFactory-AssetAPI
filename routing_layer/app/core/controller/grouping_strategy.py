@@ -21,14 +21,14 @@ Note:
     - Uses the ksqlDB client from `ksql`.
 """
 
-import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
 from routing_layer.app.config import settings, ksql
+from routing_layer.app.core.logger import get_logger
 from openfactory.assets import Asset
 
 
-logger = logging.getLogger("uvicorn.error")
+logger = get_logger(__name__)
 
 
 def escape_ksql_literal(value: str) -> str:
@@ -266,7 +266,8 @@ class UNSLevelGroupingStrategy(GroupingStrategy):
         WHERE h.uns_levels['{self.grouping_level}'] = '{escape_ksql_literal(group_name)}';
         """
         pretty_statement = "\n".join("                  " + line.lstrip() for line in statement.strip().splitlines())
-        logger.info(f"   🔧 Creating derived stream with statement:\n{pretty_statement}")
+        logger.info(f"  🔧 Creating derived stream for group {group_name}")
+        logger.debug(pretty_statement)
         ksql.statement_query(statement)
 
     def remove_derived_stream(self, group_name: str) -> None:

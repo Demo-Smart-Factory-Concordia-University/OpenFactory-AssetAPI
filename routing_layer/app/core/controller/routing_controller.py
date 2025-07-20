@@ -9,12 +9,12 @@ grouping strategies and deployment platforms. It is responsible for:
 - Managing the lifecycle of group resources dynamically based on asset metadata
 """
 
-import logging
 from typing import Optional, Tuple, Dict
+from routing_layer.app.core.logger import get_logger
 from routing_layer.app.core.controller.grouping_strategy import GroupingStrategy
 from routing_layer.app.core.controller.deployment_platform import DeploymentPlatform
 
-logger = logging.getLogger("uvicorn.error")
+logger = get_logger(__name__)
 
 
 class RoutingController:
@@ -49,7 +49,7 @@ class RoutingController:
         """
         logger.info("Initializing Routing Layer...")
         for group in self.grouping_strategy.get_all_groups():
-            logger.info(f"  Spin up group [{group}]")
+            logger.info(f"Spin up group [{group}]")
             self.grouping_strategy.create_derived_stream(group)
             self.deployment_platform.deploy_service(group)
         logger.info("✅ Routing Layer initialization complete.")
@@ -72,8 +72,6 @@ class RoutingController:
         """
         Determine the group for a given asset UUID and return the corresponding service URL.
 
-        This method performs lazy stream/service creation if the group is not yet deployed.
-
         Args:
             asset_uuid (str): The UUID of the asset making the request.
 
@@ -85,10 +83,7 @@ class RoutingController:
             logger.warning(f"⚠️ Could not determine group for asset {asset_uuid}")
             return None
 
-        logger.info(f"📦 Asset {asset_uuid} → group '{group}'")
-        # Lazy deploy/ensure resources
-        self.grouping_strategy.create_derived_stream(group)
-        self.deployment_platform.deploy_service(group)
+        logger.debug(f"Asset {asset_uuid} is in group '{group}'")
         return self.deployment_platform.get_service_url(group)
 
     def is_ready(self) -> Tuple[bool, Dict[str, str]]:

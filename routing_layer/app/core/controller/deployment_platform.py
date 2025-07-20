@@ -17,7 +17,6 @@ Note:
     Uses configuration values from the shared `settings` module for Docker network and image.
 """
 
-import logging
 import re
 import hashlib
 import httpx
@@ -26,9 +25,10 @@ from abc import ABC, abstractmethod
 from docker import DockerClient
 from docker.types import EndpointSpec
 from routing_layer.app.config import settings
+from routing_layer.app.core.logger import get_logger
 
 
-logger = logging.getLogger("uvicorn.error")
+logger = get_logger(__name__)
 
 
 class DeploymentPlatform(ABC):
@@ -175,7 +175,7 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
     and constructs their access URLs.
     """
 
-    def __init__(self, docker_client: DockerClient) -> None:
+    def __init__(self, docker_client: DockerClient = None) -> None:
         """
         Initialize the SwarmDeploymentPlatform with a Docker client.
 
@@ -193,6 +193,9 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
             RuntimeError: If Docker or Swarm are not properly configured.
         """
         self.docker_client = docker_client
+
+        if docker_client is None:
+            return
 
         try:
             self.docker_client.ping()
@@ -283,7 +286,7 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
         if existing_services:
             return
 
-        logger.info(f"   🚀 Deploying Swarm service for group '{group_name}' using image '{settings.fastapi_group_image}'")
+        logger.info(f"  🚀 Deploying Swarm service for group '{group_name}' using image '{settings.fastapi_group_image}'")
 
         # Default endpoint spec (no published port)
         endpoint_spec = None
