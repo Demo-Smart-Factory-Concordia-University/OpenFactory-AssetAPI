@@ -41,7 +41,6 @@ services:
       FASTAPI_GROUP_PORT_BASE: 6000
       LOG_LEVEL: "info"
       ENVIRONMENT: "devswarm"
-      SWARM_NODE_HOST: "localhost"
     networks:
       - factory-net
 
