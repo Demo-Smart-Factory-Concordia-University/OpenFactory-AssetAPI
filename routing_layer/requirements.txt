@@ -1,0 +1,5 @@
+git+https://github.com/Demo-Smart-Factory-Concordia-University/OpenFactory.git
+pydantic-settings
+sse-starlette
+fastapi
+uvicorn
