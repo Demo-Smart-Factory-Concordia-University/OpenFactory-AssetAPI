@@ -1,21 +1,26 @@
 """
-Deployment script for OpenFactory Routing Layer.
+Deployment Script for OpenFactory Routing Layer.
 
-This script initializes all backend infrastructure required by the routing layer,
-based on the configured grouping strategy and deployment platform.
+This script sets up the full backend infrastructure required to operate
+the routing layer in production or local development.
 
-It prepares:
-- Derived data streams or structures based on asset groupings.
-- Group-specific service infrastructure if required by the deployment backend.
-
-This script should be run before deploying the routing-layer API in production.
+What it does:
+  - Initializes derived Kafka streams (based on asset grouping strategy)
+  - Deploys a service instance per group (via the deployment platform)
+  - Deploys the central routing-layer API as a Swarm service (when not in local mode)
 
 Usage:
     python -m routing_layer.deployment.deploy
+
+Note:
+    In 'local' mode, the API is not deployed as a Swarm service. Instead, run it manually via:
+
+        python -m routing_layer.manage runserver
 """
 
 from routing_layer.deployment.controller_factory import create_routing_controller
 from routing_layer.app.core.logger import setup_logging, get_logger
+from routing_layer.app.config import settings
 
 setup_logging()
 logger = get_logger("deploy")
@@ -24,10 +29,12 @@ logger = get_logger("deploy")
 def main():
     controller = create_routing_controller()
 
-    logger.info("Initializing routing controller")
-    controller.initialize()
-
+    logger.info("Deploying OpenFactory routing API layer")
+    controller.deploy()
     logger.info("Deployment completed successfully")
+
+    if settings.environment == 'local':
+        logger.info("To run the OpenFactory routing API layer use: python -m routing_layer.manage runserver")
 
 
 if __name__ == "__main__":

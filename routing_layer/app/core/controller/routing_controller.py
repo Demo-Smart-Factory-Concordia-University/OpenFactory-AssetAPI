@@ -5,12 +5,13 @@ This module defines the `RoutingController`, which orchestrates the behavior of
 grouping strategies and deployment platforms. It is responsible for:
 
 - Initializing and tearing down group-specific services and Kafka streams
+- Deploying the OpenFactory routing layer API
 - Handling incoming client requests and routing them to the appropriate group service
-- Managing the lifecycle of group resources dynamically based on asset metadata
 """
 
 from typing import Optional, Tuple, Dict
 from routing_layer.app.core.logger import get_logger
+from routing_layer.app.config import settings
 from routing_layer.app.core.controller.grouping_strategy import GroupingStrategy
 from routing_layer.app.core.controller.deployment_platform import DeploymentPlatform
 
@@ -42,7 +43,7 @@ class RoutingController:
         self.grouping_strategy = grouping_strategy
         self.deployment_platform = deployment_platform
 
-    def initialize(self) -> None:
+    def _initialize(self) -> None:
         """
         Initialize the routing layer by creating streams and deploying services
         for all currently known groups.
@@ -54,18 +55,24 @@ class RoutingController:
             self.deployment_platform.deploy_service(group)
         logger.info("✅ Routing Layer initialization complete.")
 
-    def stop(self) -> None:
-        """
-        Tear down the routing layer by removing all group-specific streams.
+    def deploy(self) -> None:
+        """  Deploy the OpenFactory routing layer API. """
+        self._initialize()
+        if settings.environment != 'local':
+            self.deployment_platform.deploy_routing_layer_api()
+            logger.info("✅ Routing Layer API deployement complete.")
 
-        Note:
-            Group services are not stopped here — only their Kafka streams are removed.
+    def teardown(self) -> None:
+        """
+        Tear down the routing layer by removing all group-specific streams and services.
         """
         logger.info("Stopping Routing Layer...")
         for group in self.grouping_strategy.get_all_groups():
             logger.info(f"  Tearing down group [{group}]")
             self.grouping_strategy.remove_derived_stream(group)
             self.deployment_platform.remove_service(group)
+        if settings.environment != 'local':
+            self.deployment_platform.remove_routing_layer_api()
         logger.info("✅ Routing Layer removal complete.")
 
     def handle_client_request(self, asset_uuid: str) -> Optional[str]:
@@ -114,10 +121,6 @@ class RoutingController:
         grouping_ready, grouping_msg = self.grouping_strategy.is_ready()
         if not grouping_ready:
             issues["grouping_strategy"] = grouping_msg
-
-        deployment_ready, deployment_msg = self.deployment_platform.is_ready()
-        if not deployment_ready:
-            issues["deployment_platform"] = deployment_msg
 
         # Check readiness status of deployed services
         for group in self.grouping_strategy.get_all_groups():

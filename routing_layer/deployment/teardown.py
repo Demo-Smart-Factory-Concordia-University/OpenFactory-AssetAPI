@@ -25,8 +25,7 @@ def main():
     controller = create_routing_controller()
 
     logger.info("[teardown] Stopping routing controller")
-    controller.stop()
-
+    controller.teardown()
     logger.info("[teardown] Teardown completed successfully")
 
 
