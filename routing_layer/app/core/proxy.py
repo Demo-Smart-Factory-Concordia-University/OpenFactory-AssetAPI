@@ -66,7 +66,7 @@ async def asset_stream_proxy(request: Request, full_url: str) -> StreamingRespon
                         yield f"event: error\ndata: {content.decode()}\n\n".encode()
                         return
 
-                    logger.info("[proxy] Connected to upstream SSE stream")
+                    logger.info("[proxy] Connected to SSE upstream")
 
                     async for line in response.aiter_lines():
                         if await request.is_disconnected():
@@ -74,7 +74,7 @@ async def asset_stream_proxy(request: Request, full_url: str) -> StreamingRespon
                             break
 
                         if line.strip():
-                            logger.info(f"[proxy][SSE] {line}")
+                            logger.debug(f"[proxy][SSE] {line}")
                             yield (line + "\n").encode()
 
                     logger.info("[proxy] Upstream stream ended")
