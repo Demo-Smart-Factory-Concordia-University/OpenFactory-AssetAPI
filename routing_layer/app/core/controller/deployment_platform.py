@@ -19,7 +19,9 @@ Note:
 
 import re
 import hashlib
+import docker.errors
 import httpx
+import docker
 from typing import Tuple
 from abc import ABC, abstractmethod
 from docker import DockerClient
@@ -304,20 +306,23 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
                 ports={self._get_host_port(group_name): 5555}  # host:container
             )
 
-        self.docker_client.services.create(
-            image=settings.fastapi_group_image,
-            name=self._service_name(group_name),
-            networks=[settings.docker_network],
-            mode={"Replicated": {"Replicas": settings.fastapi_group_replicas}},
-            resources={
-                    "Limits": {"NanoCPUs": int(1000000000*settings.fastapi_group_cpus_limit)},
-                    "Reservations": {"NanoCPUs": int(1000000000*settings.fastapi_group_cpus_reservation)}
-                    },
-            env=[f'KAFKA_BROKER={settings.kafka_broker}',
-                 f'KAFKA_TOPIC=asset_stream_{group_name}_topic',
-                 f'KAFKA_CONSUMER_GROUP_ID=asset_stream_{group_name}_consumer_group'],
-            endpoint_spec=endpoint_spec
-        )
+        try:
+            self.docker_client.services.create(
+                image=settings.fastapi_group_image,
+                name=self._service_name(group_name),
+                networks=[settings.docker_network],
+                mode={"Replicated": {"Replicas": settings.fastapi_group_replicas}},
+                resources={
+                        "Limits": {"NanoCPUs": int(1000000000*settings.fastapi_group_cpus_limit)},
+                        "Reservations": {"NanoCPUs": int(1000000000*settings.fastapi_group_cpus_reservation)}
+                        },
+                env=[f'KAFKA_BROKER={settings.kafka_broker}',
+                     f'KAFKA_TOPIC=asset_stream_{group_name}_topic',
+                     f'KAFKA_CONSUMER_GROUP_ID=asset_stream_{group_name}_consumer_group'],
+                endpoint_spec=endpoint_spec
+            )
+        except docker.errors.APIError as e:
+            logger.error(f"  Docker API error during deployment of group '{group_name}': {e}")
 
     def remove_service(self, group_name: str) -> None:
         """
@@ -327,16 +332,58 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
             group_name (str): The name of the group whose service should be removed.
         """
         logger.info(f"    Removing Swarm service for group '{group_name}'")
-        service = self.docker_client.services.get(self._service_name(group_name))
-        service.remove()
+        try:
+            service = self.docker_client.services.get(self._service_name(group_name))
+            service.remove()
+        except docker.errors.NotFound:
+            logger.warning(f"  Swarm service for group '{group_name}' not deployed on OpenFactory Swarm cluster")
+        except docker.errors.APIError as e:
+            logger.error(f"  Docker API error: {e}")
 
     def deploy_routing_layer_api(self) -> None:
         """ Deploy the central routing layer API service. """
+
+        existing_services = self.docker_client.services.list(filters={"name": 'serving_layer_router'})
+        if existing_services:
+            logger.info("🚀 Routing layer API already deployed on OpenFactory Swarm cluster")
+            return
+
         logger.info("🚀 Deploying routing layer API on OpenFactory Swarm cluster")
+        try:
+            self.docker_client.services.create(
+                image=settings.routing_layer_image,
+                name='serving_layer_router',
+                networks=[settings.docker_network],
+                mode={"Replicated": {"Replicas": settings.routing_layer_replicas}},
+                resources={
+                        "Limits": {"NanoCPUs": int(1000000000*settings.routing_layer_cpus_limit)},
+                        "Reservations": {"NanoCPUs": int(1000000000*settings.routing_layer_cpus_reservation)}
+                        },
+                env=[f'KSQLDB_URL={settings.ksqldb_url}',
+                     f'KAFKA_BROKER={settings.kafka_broker}',
+                     f'KSQLDB_ASSETS_STREAM={settings.ksqldb_assets_stream}',
+                     f'KSQLDB_UNS_MAP={settings.ksqldb_uns_map}',
+                     f'KSQLDBFASTAPI_GROUP_IMAGE_UNS_MAP={settings.fastapi_group_image}',
+                     f'FASTAPI_GROUP_REPLICAS={settings.fastapi_group_replicas}',
+                     f'FASTAPI_GROUP_CPU_LIMIT={settings.fastapi_group_cpus_limit}',
+                     f'FASTAPI_GROUP_CPU_RESERVATION={settings.fastapi_group_cpus_reservation}',
+                     f'LOG_LEVEL={settings.log_level}',
+                     'ENVIRONMENT=production'],
+                endpoint_spec=EndpointSpec(ports={5555: 5555})
+            )
+        except docker.errors.APIError as e:
+            logger.error(f"  Docker API error: {e}")
 
     def remove_routing_layer_api(self) -> None:
         """ Remove the central routing layer API service. """
         logger.info("  Removing routing layer API from the OpenFactory Swarm cluster")
+        try:
+            service = self.docker_client.services.get('serving_layer_router')
+            service.remove()
+        except docker.errors.NotFound:
+            logger.warning("  Routing layer API not deployed on OpenFactory Swarm cluster")
+        except docker.errors.APIError as e:
+            logger.error(f"  Docker API error: {e}")
 
     def get_service_url(self, group_name: str) -> str:
         """

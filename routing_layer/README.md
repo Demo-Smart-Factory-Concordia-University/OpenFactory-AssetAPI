@@ -65,16 +65,47 @@ The Routing Layer manages asset grouping, stream generation, and deployment of g
 
 Configured via environment variables (typically via a shared `.env` file):
 
-| Variable               | Description                                                     | Required                                            |
-| ---------------------- | --------------------------------------------------------------- | --------------------------------------------------- |
-| `KSQLDB_URL`           | URL of the ksqlDB server (e.g., `http://localhost:8088`)        | ✅ Yes                                              |
-| `KSQLDB_ASSETS_STREAM` | Name of the ksqlDB stream with enriched asset data              | ❌ No (default: `enriched_assets_stream`)           |
-| `KSQLDB_UNS_MAP`       | Name of the ksqlDB table mapping assets to UNS hierarchy        | ❌ No (default: `asset_to_uns_map`)                 |
-| `DOCKER_NETWORK`       | Docker Swarm overlay network name                               | ❌ No (default: `factory-net`)                      |
-| `FASTAPI_GROUP_IMAGE`  | Docker image for group services                                 | ❌ No (default: `openfactory/fastapi-group:latest`) |
-| `LOG_LEVEL`            | Logging level (`debug`, `info`, `warning`, `error`, `critical`) | ❌ No (default: `info`)                             |
+### 🔌 Kafka & ksqlDB
 
-All of these can be placed in a `.env` file at the project root for development convenience.
+| Variable               | Description                                              | Required                                 |
+| ---------------------- | -------------------------------------------------------- | ---------------------------------------- |
+| `KAFKA_BROKER`         | Kafka bootstrap server address (e.g., `localhost:9092`)  | ✅ Yes                                    |
+| `KSQLDB_URL`           | URL of the ksqlDB server (e.g., `http://localhost:8088`) | ✅ Yes                                    |
+| `KSQLDB_ASSETS_STREAM` | Name of the ksqlDB stream with enriched asset data       | ❌ No (default: `enriched_assets_stream`) |
+| `KSQLDB_UNS_MAP`       | Name of the ksqlDB table mapping assets to UNS hierarchy | ❌ No (default: `asset_to_uns_map`)       |
+
+### 🐳 Docker & Swarm
+
+| Variable          | Description                                  | Required                       |
+| ----------------- | -------------------------------------------- | ------------------------------ |
+| `DOCKER_NETWORK`  | Docker Swarm overlay network name            | ❌ No (default: `factory-net`) |
+| `SWARM_NODE_HOST` | Host or IP address of the Swarm manager node | ❌ No (default: `localhost`)   |
+
+### 🚦 Routing Layer
+
+| Variable                        | Description                                    | Required                             |
+| ------------------------------- | ---------------------------------------------- | ------------------------------------ |
+| `ROUTING_LAYER_IMAGE`           | Docker image for the central routing layer API | ❌ No (default: `ofa/routing-layer`) |
+| `ROUTING_LAYER_REPLICAS`        | Number of routing layer replicas               | ❌ No (default: `1`)                 |
+| `ROUTING_LAYER_CPU_LIMIT`       | CPU limit per routing layer container          | ❌ No (default: `1`)                 |
+| `ROUTING_LAYER_CPU_RESERVATION` | CPU reservation per routing layer container    | ❌ No (default: `0.5`)               |
+
+### 🧩 FastAPI Group Services
+
+| Variable                        | Description                                                    | Required                                            |
+| ------------------------------- | -------------------------------------------------------------- | --------------------------------------------------- |
+| `FASTAPI_GROUP_IMAGE`           | Docker image for group services                                | ❌ No (default: `openfactory/fastapi-group:latest`) |
+| `FASTAPI_GROUP_REPLICAS`        | Number of group service replicas                               | ❌ No (default: `3`)                                |
+| `FASTAPI_GROUP_CPU_LIMIT`       | CPU limit per group container                                  | ❌ No (default: `1`)                                |
+| `FASTAPI_GROUP_CPU_RESERVATION` | CPU reservation per group container                            | ❌ No (default: `0.5`)                              |
+| `FASTAPI_GROUP_PORT_BASE`       | Base port for exposing group services during local development | ❌ No (default: `6000`)                             |
+
+### 🛠️ Miscellaneous
+
+| Variable      | Description                                                     | Required                      |
+| ------------- | --------------------------------------------------------------- | ----------------------------- |
+| `ENVIRONMENT` | App environment (`local`, `devswarm` or `production`)           | ❌ No (default: `production`) |
+| `LOG_LEVEL`   | Logging level (`debug`, `info`, `warning`, `error`, `critical`) | ❌ No (default: `info`)       |
 
 ---
 
