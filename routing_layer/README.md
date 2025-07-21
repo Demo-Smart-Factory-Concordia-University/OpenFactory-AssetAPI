@@ -111,23 +111,37 @@ Configured via environment variables (typically via a shared `.env` file):
 
 ## 🐳 Running Locally
 
-To start the **Routing Layer** FastAPI app locally:
+### 🐳 Run with Docker + Swarm
 
-```bash
-python -m routing_layer.app.main
-```
-
-To run it in Docker (e.g., for local Swarm testing):
-
+Build the Docker image:
 ```bash
 docker build -t openfactory/routing-layer .
-docker swarm init  # if not already initialized
-docker service create \
-  --name routing-layer \
-  --network factory-net \
-  --mount type=bind,src=$(pwd)/.env,dst=/app/.env \
-  openfactory/routing-layer
 ```
+
+Then deploy the full routing layer infrastructure:
+```bash
+python manage.py deploy
+```
+
+> **Note:**
+> If `ENVIRONMENT=local` is set, the `deploy` command will **skip deploying the routing layer API** to the Swarm cluster. This allows you to run the API locally while still deploying group services inside Swarm.
+
+To tear down all deployed services:
+```bash
+python manage.py teardown
+```
+
+---
+
+### ▶️ Run the Routing Layer API Locally
+
+If you're using `ENVIRONMENT=local`, run the **FastAPI** app locally using Uvicorn:
+```bash
+python manage.py runserver
+```
+This will start the API server at `http://localhost:5555` using the environment defined in your `.env`.
+
+---
 
 ## 🔧 Development Structure
 
