@@ -134,12 +134,27 @@ docker service create \
 ```bash
 routing_layer/
 ├── app/
-│   ├── config.py                        # Environment and ksqlDB client
-│   ├── main.py                          # FastAPI app with lifespan controller
-│   └── core/
-│       ├── controller/
-│       │   ├── grouping_strategy.py     # Abstract & UNS-based grouping
-│       │   ├── deployment_platform.py   # Abstract & Swarm-based deployment
-│       │   └── routing_controller.py    # Orchestrates grouping + deployment
-└── README.md                            # This file
+│   ├── api/
+│   │   └── router_asset.py             # FastAPI route handling asset requests
+│   ├── config.py                       # Environment variables and ksqlDB client config
+│   ├── core/
+│   │   ├── controller/
+│   │   │   ├── deployment_platform.py  # Abstract & Swarm-based deployment logic
+│   │   │   ├── grouping_strategy.py    # Grouping strategies (e.g., UNS-based)
+│   │   │   ├── routing_controller.py   # Orchestrates grouping and deployment
+│   │   │   └── __init__.py
+│   │   ├── logger.py                   # Central logging setup
+│   │   ├── proxy.py                    # Local proxy utilities
+│   │   └── __init__.py
+│   ├── dependencies.py                 # Dependency injection for FastAPI routes
+│   └── main.py                         # FastAPI app setup
+├── deployment/
+│   ├── controller_factory.py           # Builds controller instances for deployment
+│   ├── deploy.py                       # CLI entry for deploying group services
+│   └── teardown.py                     # CLI entry for removing services
+├── docker-compose.yml                  # Local development orchestration
+├── Dockerfile                          # Docker build config for routing layer
+├── manage.py                           # Unified CLI for managing the app
+├── requirements.txt                    # Python dependencies
+└── README.md                           # This file
 ```
