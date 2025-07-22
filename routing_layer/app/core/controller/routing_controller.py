@@ -86,11 +86,11 @@ class RoutingController:
             Optional[str]: The service URL for the group, or None if the group could not be resolved.
         """
         group = self.grouping_strategy.get_group_for_asset(asset_uuid)
-        if not group:
-            logger.warning(f"⚠️ Could not determine group for asset {asset_uuid}")
+        if not group or group == 'UNAVAILABLE':
+            logger.warning(f"[controller] Could not determine group for asset {asset_uuid}")
             return None
 
-        logger.debug(f"Asset {asset_uuid} is in group '{group}'")
+        logger.debug(f"[controller] Asset {asset_uuid} is in group '{group}'")
         return self.deployment_platform.get_service_url(group)
 
     def is_ready(self) -> Tuple[bool, Dict[str, str]]:
