@@ -363,10 +363,6 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
                      f'KAFKA_BROKER={settings.kafka_broker}',
                      f'KSQLDB_ASSETS_STREAM={settings.ksqldb_assets_stream}',
                      f'KSQLDB_UNS_MAP={settings.ksqldb_uns_map}',
-                     f'KSQLDBFASTAPI_GROUP_IMAGE_UNS_MAP={settings.fastapi_group_image}',
-                     f'FASTAPI_GROUP_REPLICAS={settings.fastapi_group_replicas}',
-                     f'FASTAPI_GROUP_CPU_LIMIT={settings.fastapi_group_cpus_limit}',
-                     f'FASTAPI_GROUP_CPU_RESERVATION={settings.fastapi_group_cpus_reservation}',
                      f'LOG_LEVEL={settings.log_level}',
                      'ENVIRONMENT=production'],
                 endpoint_spec=EndpointSpec(ports={5555: 5555})

@@ -34,10 +34,6 @@ services:
       KAFKA_BROKER: ${KAFKA_BROKER}
       KSQLDB_ASSETS_STREAM: "enriched_assets_stream"
       KSQLDB_UNS_MAP: "asset_to_uns_map"
-      FASTAPI_GROUP_IMAGE: "ofa/stream-api-non-replicated"
-      FASTAPI_GROUP_REPLICAS: 1
-      FASTAPI_GROUP_CPU_LIMIT: 1
-      FASTAPI_GROUP_CPU_RESERVATION: 0.5
       FASTAPI_GROUP_PORT_BASE: 6000
       LOG_LEVEL: "info"
       ENVIRONMENT: "devswarm"
