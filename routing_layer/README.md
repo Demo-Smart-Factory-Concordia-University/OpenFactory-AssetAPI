@@ -120,7 +120,7 @@ docker build -t openfactory/routing-layer .
 
 Then deploy the full routing layer infrastructure:
 ```bash
-python manage.py deploy
+python -m routing_layer.manage deploy
 ```
 
 > **Note:**
@@ -128,7 +128,7 @@ python manage.py deploy
 
 To tear down all deployed services:
 ```bash
-python manage.py teardown
+python -m routing_layer.manage teardown
 ```
 
 ---
@@ -137,7 +137,11 @@ python manage.py teardown
 
 If you're using `ENVIRONMENT=local`, run the **FastAPI** app locally using Uvicorn:
 ```bash
-python manage.py runserver
+python -m routing_layer.app.main
+```
+or
+```bash
+python -m routing_layer.manage runserver
 ```
 This will start the API server at `http://localhost:5555` using the environment defined in your `.env`.
 
