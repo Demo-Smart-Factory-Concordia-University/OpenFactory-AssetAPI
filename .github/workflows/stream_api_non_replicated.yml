@@ -63,6 +63,6 @@ jobs:
             ${{ env.TAGS }}
             ${{ env.TAGS_LATEST }}
           build-args: |
-              VERSION=${{ env.VERSION }}
-              APPLICATION_MANUFACTURER=${{ github.repository }}
-              OPENFACTORY_VERSION=${{ env.OPENFACTORY_VERSION }}
+            VERSION=${{ env.VERSION }}
+            APPLICATION_MANUFACTURER=${{ github.repository }}
+            OPENFACTORY_VERSION=${{ env.OPENFACTORY_VERSION }}
