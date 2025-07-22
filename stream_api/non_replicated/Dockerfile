@@ -5,6 +5,9 @@ FROM python:3.12-slim
 ARG UNAME=stream_api
 ARG UID=1200
 ARG GID=1200
+ARG VERSION=latest
+ARG APPLICATION_MANUFACTURER=OpenFactory-AssetAPI
+ARG OPENFACTORY_VERSION=latest
 
 # Create a non-root user and group
 RUN groupadd --gid $GID $UNAME \
@@ -24,6 +27,11 @@ COPY . stream_api/non_replicated
 
 # Change ownership to the non-root user
 RUN chown -R $UNAME:$UNAME /app
+
+# Set environment variable from build argument
+ENV APPLICATION_VERSION=${VERSION}
+ENV APPLICATION_MANUFACTURER=${APPLICATION_MANUFACTURER}
+ENV OPENFACTORY_VERSION=${OPENFACTORY_VERSION}
 
 # Switch to non-root user
 USER $UNAME
