@@ -23,7 +23,8 @@ Environment Variable:
 """
 
 import sys
-import subprocess
+import uvicorn
+from routing_layer.app.config import settings
 
 
 def main():
@@ -52,11 +53,10 @@ def main():
         run_teardown()
 
     elif command == "runserver":
-        subprocess.run([
-            "uvicorn", "routing_layer.app.main:app",
-            "--host", "0.0.0.0", "--port", "5555",
-            "--log-level", "info"
-        ])
+        uvicorn.run("routing_layer.app.main:app",
+                    host="0.0.0.0", port=5555,
+                    reload=True,
+                    log_level=settings.log_level)
 
     else:
         print(f"Unknown command: {command}")
