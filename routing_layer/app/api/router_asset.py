@@ -58,7 +58,7 @@ async def route_asset_stream(request: Request, asset_uuid: str) -> Union[Streami
     # Resolve target base URL from routing controller
     target_url = routing_controller.handle_client_request(asset_uuid)
     if not target_url:
-        logger.warning(f"No route found for asset_uuid {asset_uuid}")
+        logger.warning(f"[router] No route found for asset_uuid {asset_uuid}")
         raise HTTPException(status_code=404, detail="Asset group not found")
 
     # Filter query parameters: whitelist only allowed keys to forward (e.g., 'asset_uuid', 'id', etc.)
@@ -72,7 +72,7 @@ async def route_asset_stream(request: Request, asset_uuid: str) -> Union[Streami
     try:
         return await asset_stream_proxy(request, full_url)
     except Exception as e:
-        logger.exception(f"Error proxying request to {full_url}: {e}")
+        logger.exception(f"[router] Error proxying request to {full_url}: {e}")
         return JSONResponse(
             status_code=502,
             content={"detail": "Failed to proxy request to group service"}
