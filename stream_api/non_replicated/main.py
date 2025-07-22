@@ -33,8 +33,10 @@ Environment Variables:
 import asyncio
 import logging
 import uvicorn
+import os
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from fastapi.responses import JSONResponse
 from stream_api.non_replicated.config import settings
 from stream_api.non_replicated.app.core.kafka_dispatcher import start_kafka_dispatcher
 from stream_api.non_replicated.app.api import asset_stream
@@ -67,6 +69,18 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(readiness.router)
 app.include_router(asset_stream.router)
+
+
+@app.get("/info", summary="Get application metadata")
+async def get_app_info():
+    version = os.environ.get("APPLICATION_VERSION", "local-dev")
+    build_origin = os.environ.get("APPLICATION_MANUFACTURER", "local-dev")
+    ofa_version = os.environ.get("OPENFACTORY_VERSION", "local-dev")
+    return JSONResponse(content={
+        "version": version,
+        "build_origin": build_origin,
+        "openfactory_version": ofa_version
+    })
 
 
 def setup_logging():
