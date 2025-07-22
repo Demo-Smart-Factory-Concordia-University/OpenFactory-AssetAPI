@@ -1,0 +1,68 @@
+name: Create Routing-Layer Docker image on GitHub Container Registry
+
+on:
+  release:
+    types:
+      - created
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE: ghcr.io/demo-smart-factory-concordia-university/routing-layer
+
+jobs:
+  push_to_registry:
+    name: Build and Push Docker Image to GHCR
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Set tags dynamically
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAGS=${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_ENV
+            echo "VERSION=latest" >> $GITHUB_ENV
+          else
+            echo "TAGS=${{ env.DOCKER_IMAGE }}:${{ github.ref_name }}" >> $GITHUB_ENV
+            echo "TAGS_LATEST=${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_ENV
+            echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Read OpenFactory version
+        run: echo "OPENFACTORY_VERSION=$(cat openfactory-version.txt)" >> $GITHUB_ENV
+
+      - name: Set up QEMU (for emulating different architectures)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx (for multi-architecture builds)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print build version info
+        run: |
+          echo "Building Routing-Layer Docker image"
+          echo "OpenFactory version: ${{ env.OPENFACTORY_VERSION }}"
+          echo "App version: ${{ env.VERSION }}"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./routing_layer/
+          file: ./routing_layer/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.TAGS }}
+            ${{ env.TAGS_LATEST }}
+          build-args: |
+            VERSION=${{ env.VERSION }}
+            APPLICATION_MANUFACTURER=${{ github.repository }}
+            OPENFACTORY_VERSION=${{ env.OPENFACTORY_VERSION }}
