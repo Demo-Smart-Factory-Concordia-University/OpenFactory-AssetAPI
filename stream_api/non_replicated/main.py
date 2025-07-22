@@ -72,7 +72,18 @@ app.include_router(asset_stream.router)
 
 
 @app.get("/info", summary="Get application metadata")
-async def get_app_info():
+async def get_app_info() -> JSONResponse:
+    """
+    Application metadata endpoint.
+
+    This endpoint returns metadata about the running application, including:
+        - Application version
+        - Build origin
+        - OpenFactory platform version
+
+    Returns:
+        JSONResponse: A JSON response containing application metadata with HTTP 200.
+    """
     version = os.environ.get("APPLICATION_VERSION", "local-dev")
     build_origin = os.environ.get("APPLICATION_MANUFACTURER", "local-dev")
     ofa_version = os.environ.get("OPENFACTORY_VERSION", "local-dev")
