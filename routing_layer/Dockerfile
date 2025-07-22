@@ -14,9 +14,12 @@
     FROM python:3.12-slim
 
 # Arguments for non-root user creation
-ARG UNAME=stream_api
+ARG UNAME=routing_layer
 ARG UID=1200
 ARG GID=1200
+ARG VERSION=latest
+ARG APPLICATION_MANUFACTURER=OpenFactory-AssetAPI
+ARG OPENFACTORY_VERSION=latest
 
 # Install git and create a non-root user and group
 RUN apt-get update && apt-get install -y git \
@@ -38,6 +41,11 @@ COPY . routing_layer
 
 # Change ownership to the non-root user
 RUN chown -R $UNAME:$UNAME /app
+
+# Set environment variable from build argument
+ENV APPLICATION_VERSION=${VERSION}
+ENV APPLICATION_MANUFACTURER=${APPLICATION_MANUFACTURER}
+ENV OPENFACTORY_VERSION=${OPENFACTORY_VERSION}
 
 # Switch to non-root user
 USER $UNAME
