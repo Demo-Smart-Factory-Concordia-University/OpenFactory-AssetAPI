@@ -43,10 +43,11 @@ Exposed Endpoints:
 """
 
 import uvicorn
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Dict
 from routing_layer.app.config import settings
 from routing_layer.app.dependencies import routing_controller
 from routing_layer.app.api.router_asset import router as assets_router
@@ -81,7 +82,7 @@ app = FastAPI(
 
 
 @app.get("/health", include_in_schema=False)
-async def health_check():
+async def health_check() -> Dict[str, str]:
     """
     Liveness probe endpoint.
 
@@ -93,7 +94,7 @@ async def health_check():
 
 
 @app.get("/ready", include_in_schema=False)
-async def readiness_check():
+async def readiness_check() -> JSONResponse:
     """
     Readiness probe endpoint.
 
@@ -102,14 +103,38 @@ async def readiness_check():
         - Deployment platform readiness (e.g., Docker Swarm manager availability)
 
     Returns:
-        Dict: A dictionary indicating readiness status.
-              If ready, returns {"status": "ready"} with HTTP 200.
-              If not ready, returns HTTP 503 with content {"status": "not ready", "issues": <message>}.
+        JSONResponse: A JSON response indicating readiness status.
+                      If ready, returns {"status": "ready"} with HTTP 200.
+                      If not ready, returns HTTP 503 with content {"status": "not ready", "issues": <message>}.
     """
     ready, issues = routing_controller.is_ready()
     if not ready:
         return JSONResponse(status_code=503, content={"status": "not ready", "issues": issues})
-    return {"status": "ready"}
+    return JSONResponse(status_code=200, content={"status": "ready"})
+
+
+@app.get("/info", summary="Get application metadata")
+async def get_app_info() -> JSONResponse:
+    """
+    Application metadata endpoint.
+
+    This endpoint returns metadata about the running application, including:
+        - Application version
+        - Build origin
+        - OpenFactory platform version
+
+    Returns:
+        JSONResponse: A JSON response containing application metadata with HTTP 200.
+    """
+    version = os.environ.get("APPLICATION_VERSION", "local-dev")
+    build_origin = os.environ.get("APPLICATION_MANUFACTURER", "local-dev")
+    ofa_version = os.environ.get("OPENFACTORY_VERSION", "local-dev")
+    return JSONResponse(content={
+        "version": version,
+        "build_origin": build_origin,
+        "openfactory_version": ofa_version
+    })
+
 
 app.include_router(assets_router)
 
