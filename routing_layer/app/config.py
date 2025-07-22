@@ -30,7 +30,7 @@ Environment Variables:
     - `ROUTING_LAYER_REPLICAS`: Number of routing layer replicas to deploy (default: 1)
     - `ROUTING_LAYER_CPU_LIMIT`: CPU limit per routing layer container (default: 1)
     - `ROUTING_LAYER_CPU_RESERVATION`: CPU reservation per routing layer container (default: 0.5)
-    - `FASTAPI_GROUP_IMAGE`: Docker image for group service containers (default: "openfactory/fastapi-group:latest")
+    - `FASTAPI_GROUP_IMAGE`: Docker image for group service containers
     - `FASTAPI_GROUP_REPLICAS`: Number of service replicas per group (default: 3)
     - `FASTAPI_GROUP_CPU_LIMIT`: CPU limit per group service (default: 1)
     - `FASTAPI_GROUP_CPU_RESERVATION`: CPU reservation per group service (default: 0.5)
@@ -61,7 +61,8 @@ class Settings(BaseSettings):
         docker_network (str): Docker Swarm network used for deploying group services.
             Environment variable: `DOCKER_NETWORK`. Default: "factory-net".
         routing_layer_image (str): Docker image of the central routing layer API.
-            Environment variable: `ROUTING_LAYER_IMAGE`. Default: "ofa/routing-layer".
+            Environment variable: `ROUTING_LAYER_IMAGE`.
+            Default: "ghcr.io/demo-smart-factory-concordia-university/routing-layer:latest".
         routing_layer_replicas (int): Number of routing layer service replicas.
             Environment variable: `ROUTING_LAYER_REPLICAS`
         routing_layer_cpus_limit (float): CPU limit per routing layer container.
@@ -69,7 +70,8 @@ class Settings(BaseSettings):
         routing_layer_cpus_reservation (float): CPU reservation per routing layer container.
             Environment variable: `ROUTING_LAYER_CPU_RESERVATION`
         fastapi_group_image (str): Docker image to use for group service containers.
-            Environment variable: `FASTAPI_GROUP_IMAGE`. Default: "openfactory/fastapi-group:latest".
+            Environment variable: `FASTAPI_GROUP_IMAGE`.
+            Default: "ghcr.io/demo-smart-factory-concordia-university/stream-api-non-replicated:latest".
         fastapi_group_replicas (int): Number of service replicas per group.
             Environment variable: `FASTAPI_GROUP_REPLICAS`. Default: 3.
         fastapi_group_cpus_limit (float): CPU limit per group container.
@@ -85,23 +87,37 @@ class Settings(BaseSettings):
         swarm_node_host (str): Host or IP address of the Swarm manager node (used for local proxying).
             Environment variable: `SWARM_NODE_HOST`. Default: "localhost".
     """
+
+    # Kafka & ksqlDB
     kafka_broker: str = Field(default="localhost:9092", env="KAFKA_BROKER")
     ksqldb_url: str = Field(default="http://localhost:8088", env="KSQLDB_URL")
     ksqldb_assets_stream: str = Field(default="enriched_assets_stream", env="KSQLDB_ASSETS_STREAM")
     ksqldb_uns_map: str = Field(default="asset_to_uns_map", env="KSQLDB_UNS_MAP")
+
+    # Docker & Swarm
     docker_network: str = Field(default="factory-net", env="DOCKER_NETWORK")
-    routing_layer_image: str = Field(default="ofa/routing-layer", env="ROUTING_LAYER_IMAGE")
+    swarm_node_host: str = Field(default="localhost", env="SWARM_NODE_HOST")
+
+    # Routing layer API
+    routing_layer_image: str = Field(
+        default="ghcr.io/demo-smart-factory-concordia-university/routing-layer:latest",
+        env="ROUTING_LAYER_IMAGE")
     routing_layer_replicas: int = Field(default=1, env="ROUTING_LAYER_REPLICAS")
     routing_layer_cpus_limit: float = Field(default=1, env="ROUTING_LAYER_CPU_LIMIT")
     routing_layer_cpus_reservation: float = Field(default=0.5, env="ROUTING_LAYER_CPU_RESERVATION")
-    fastapi_group_image: str = Field(default="openfactory/fastapi-group:latest", env="FASTAPI_GROUP_IMAGE")
-    fastapi_group_replicas: int = Field(default=3, env="FASTAPI_GROUP_REPLICAS")
+
+    # FastAPI Group Services
+    fastapi_group_image: str = Field(
+        default="ghcr.io/demo-smart-factory-concordia-university/stream-api-non-replicated:latest",
+        env="FASTAPI_GROUP_IMAGE")
+    fastapi_group_replicas: int = Field(default=1, env="FASTAPI_GROUP_REPLICAS")
     fastapi_group_cpus_limit: float = Field(default=1, env="FASTAPI_GROUP_CPU_LIMIT")
     fastapi_group_cpus_reservation: float = Field(default=0.5, env="FASTAPI_GROUP_CPU_RESERVATION")
     fastapi_group_host_port_base: int = Field(default=6000, env="FASTAPI_GROUP_PORT_BASE")
+
+    # Miscellaneous
     log_level: str = Field(default="info", env="LOG_LEVEL")
     environment: str = Field(default="production", env="ENVIRONMENT")
-    swarm_node_host: str = Field(default="localhost", env="SWARM_NODE_HOST")
 
     model_config = {
         "env_file": ".env",
