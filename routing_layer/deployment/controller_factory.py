@@ -7,7 +7,7 @@ runtime initialization scripts.
 
 from routing_layer.app.core.controller.routing_controller import RoutingController
 from routing_layer.app.core.controller.grouping_strategy import UNSLevelGroupingStrategy
-from routing_layer.app.core.controller.deployment_platform import SwarmDeploymentPlatform
+from routing_layer.app.core.controller.swarm_deployment_platform import SwarmDeploymentPlatform
 import docker
 
 
