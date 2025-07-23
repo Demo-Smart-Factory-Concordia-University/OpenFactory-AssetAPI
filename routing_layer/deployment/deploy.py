@@ -18,7 +18,7 @@ Note:
         python -m routing_layer.manage runserver
 """
 
-from routing_layer.deployment.controller_factory import create_routing_controller
+from routing_layer.app.core.controller.routing_controller import RoutingController
 from routing_layer.app.core.logger import setup_logging, get_logger
 from routing_layer.app.config import settings
 
@@ -27,7 +27,7 @@ logger = get_logger("deploy")
 
 
 def main():
-    controller = create_routing_controller()
+    controller = RoutingController()
 
     logger.info("Deploying OpenFactory routing API layer")
     controller.deploy()

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openfactory-routing-layer"
+version = "0.0.1"
+description = "Routing Layer for OpenFactory using pluggable grouping and deployment strategies"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "OpenFactory @ git+https://github.com/Demo-Smart-Factory-Concordia-University/OpenFactory.git",
+    "pydantic-settings",
+    "sse-starlette",
+    "fastapi",
+    "uvicorn"
+]
+
+[tool.setuptools]
+packages = ["routing_layer"]
+
+[project.entry-points."openfactory.grouping_strategies"]
+workcenter = "routing_layer.app.core.controller.unslevel_grouping_strategy:UNSLevelGroupingStrategy"
+
+[project.entry-points."openfactory.deployment_platforms"]
+swarm = "routing_layer.app.core.controller.swarm_deployment_platform:SwarmDeploymentPlatform"

@@ -4,9 +4,16 @@ Dependency Initialization Module for OpenFactory Routing Layer.
 This module defines shared, singleton-style dependencies used throughout the
 Routing Layer application.
 
-It sets up a `RoutingController` instance configured with:
-  - A UNS-level-based grouping strategy (e.g., grouping by 'workcenter').
-  - A Swarm-based deployment platform for group-specific FastAPI services.
+It sets up a `RoutingController` instance by dynamically loading:
+
+  - A grouping strategy from the `openfactory.grouping_strategies` entry point group.
+  - A deployment platform from the `openfactory.deployment_platforms` entry point group.
+
+The exact implementation used is determined by the environment variables:
+    - `GROUPING_STRATEGY`
+    - `DEPLOYMENT_PLATFORM`
+
+These are defined in the global application configuration (via `Settings`).
 
 This instance is imported by other parts of the application, such as the
 FastAPI main entrypoint and endpoint routers.
@@ -18,11 +25,6 @@ Note:
 """
 
 from routing_layer.app.core.controller.routing_controller import RoutingController
-from routing_layer.app.core.controller.unslevel_grouping_strategy import UNSLevelGroupingStrategy
-from routing_layer.app.core.controller.swarm_deployment_platform import SwarmDeploymentPlatform
 
 # Instantiate the routing controller with default grouping strategy and deployment backend
-routing_controller = RoutingController(
-    grouping_strategy=UNSLevelGroupingStrategy(),
-    deployment_platform=SwarmDeploymentPlatform(),
-)
+routing_controller = RoutingController()

@@ -108,6 +108,8 @@ class Settings(BaseSettings):
     routing_layer_replicas: int = Field(default=1, env="ROUTING_LAYER_REPLICAS")
     routing_layer_cpus_limit: float = Field(default=1, env="ROUTING_LAYER_CPU_LIMIT")
     routing_layer_cpus_reservation: float = Field(default=0.5, env="ROUTING_LAYER_CPU_RESERVATION")
+    grouping_strategy: str = Field(default="workcenter", env="GROUPING_STRATEGY")
+    deployment_platform: str = Field(default="swarm", env="DEPLOYMENT_PLATFORM")
 
     # FastAPI Group Services
     fastapi_group_image: str = Field(

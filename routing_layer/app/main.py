@@ -4,14 +4,6 @@ Main application entrypoint for the OpenFactory Routing Layer API.
 This module creates and configures the FastAPI application for the routing layer,
 which dynamically manages routing logic based on asset grouping and deployment strategy.
 
-It instantiates the routing controller using:
-    - A UNS-level grouping strategy (e.g., by workcenter)
-    - A Docker Swarm-based deployment platform for deploying service groups
-
-Application lifecycle (startup/shutdown) is managed using FastAPI's lifespan events.
-During startup, the routing controller initializes and begins monitoring group membership;
-during shutdown, it gracefully stops dispatching and releases resources.
-
 The Uvicorn ASGI server is launched when the module is run directly,
 using configuration from the `settings` singleton.
 
@@ -44,35 +36,12 @@ Exposed Endpoints:
 
 import uvicorn
 import os
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from typing import AsyncGenerator, Dict
+from typing import Dict
 from routing_layer.app.config import settings
 from routing_layer.app.dependencies import routing_controller
 from routing_layer.app.api.router_asset import router as assets_router
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """
-    Application startup and shutdown context manager.
-
-    Initializes the routing controller on startup and ensures it is properly
-    shut down on application exit.
-
-    Args:
-        app (FastAPI): The FastAPI application instance.
-
-    Yields:
-        None: Control is yielded to allow the app to run.
-    """
-    routing_controller.initialize()
-    try:
-        yield
-    finally:
-        # Wait for dispatcher to stop cleanly
-        routing_controller.stop()
 
 
 app = FastAPI(

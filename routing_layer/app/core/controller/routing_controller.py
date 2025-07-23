@@ -12,6 +12,7 @@ grouping strategies and deployment platforms. It is responsible for:
 from typing import Optional, Tuple, Dict
 from routing_layer.app.core.logger import get_logger
 from routing_layer.app.config import settings
+from routing_layer.app.core.utils import load_plugin
 from routing_layer.app.core.controller.grouping_strategy import GroupingStrategy
 from routing_layer.app.core.controller.deployment_platform import DeploymentPlatform
 
@@ -26,22 +27,40 @@ class RoutingController:
     - Create group-specific Kafka streams
     - Deploy corresponding FastAPI services
     - Dynamically route client requests to the appropriate group
-
-    Args:
-        grouping_strategy: Instance of a class implementing the GroupingStrategy interface.
-        deployment_platform: Instance of a class implementing the DeploymentPlatform interface.
     """
 
-    def __init__(self, grouping_strategy: GroupingStrategy, deployment_platform: DeploymentPlatform) -> None:
+    def __init__(self) -> None:
         """
-        Initialize the RoutingController.
+        Initialize the RoutingController using plugin-based configuration.
 
-        Args:
-            grouping_strategy (GroupingStrategy): The strategy used to determine how assets are grouped.
-            deployment_platform (DeploymentPlatform): The platform used to deploy group-specific services.
+        This constructor dynamically loads the grouping strategy and deployment platform
+        based on the environment variables `GROUPING_STRATEGY` and `DEPLOYMENT_PLATFORM`
+        defined in the application settings.
+
+        The corresponding classes must be registered as entry points in `pyproject.toml` under:
+
+        - `openfactory.grouping_strategies`
+        - `openfactory.deployment_platforms`
+
+        Raises:
+            ValueError: If no matching plugin is found, or if the loaded class does not
+                        subclass the expected interface.
         """
-        self.grouping_strategy = grouping_strategy
-        self.deployment_platform = deployment_platform
+        strategy_cls = load_plugin("openfactory.grouping_strategies", settings.grouping_strategy)
+        platform_cls = load_plugin("openfactory.deployment_platforms", settings.deployment_platform)
+
+        if not issubclass(strategy_cls, GroupingStrategy):
+            raise TypeError(
+                f"Plugin '{settings.grouping_strategy}' does not inherit from GroupingStrategy"
+            )
+
+        if not issubclass(platform_cls, DeploymentPlatform):
+            raise TypeError(
+                f"Plugin '{settings.deployment_platform}' does not inherit from DeploymentPlatform"
+            )
+
+        self.grouping_strategy = strategy_cls()
+        self.deployment_platform = platform_cls()
 
     def _initialize(self) -> None:
         """

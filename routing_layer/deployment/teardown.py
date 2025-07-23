@@ -14,7 +14,7 @@ Usage:
     python -m routing_layer.deployment.teardown
 """
 
-from routing_layer.deployment.controller_factory import create_routing_controller
+from routing_layer.app.core.controller.routing_controller import RoutingController
 from routing_layer.app.core.logger import setup_logging, get_logger
 
 setup_logging()
@@ -22,7 +22,7 @@ logger = get_logger("teardown")
 
 
 def main():
-    controller = create_routing_controller()
+    controller = RoutingController()
 
     logger.info("[teardown] Stopping routing controller")
     controller.teardown()
