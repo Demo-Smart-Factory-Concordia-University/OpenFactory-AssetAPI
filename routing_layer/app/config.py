@@ -35,6 +35,7 @@ Environment Variables:
     - `FASTAPI_GROUP_CPU_LIMIT`: CPU limit per group service (default: 1)
     - `FASTAPI_GROUP_CPU_RESERVATION`: CPU reservation per group service (default: 0.5)
     - `FASTAPI_GROUP_PORT_BASE`: Base host port to expose group services in local dev (default: 6000)
+    - `UNS_FASTAPI_GROUP_GROUPING_LEVEL`: Grouping level for UNS-based FastAPI services, e.g., "workcenter" (default: "workcenter")
     - `ENVIRONMENT`: Current environment, either "local" or "production" (default: "production")
     - `SWARM_NODE_HOST`: Host or IP address of the Swarm manager node (default: "localhost")
     - `LOG_LEVEL`: Logging level ("debug", "info", "warning", "error", "critical"; default: "info")
@@ -80,6 +81,8 @@ class Settings(BaseSettings):
             Environment variable: `FASTAPI_GROUP_CPU_RESERVATION`. Default: 0.5.
         fastapi_group_host_port_base (int): Base host port to publish services for local development.
             Environment variable: `FASTAPI_GROUP_PORT_BASE`. Default: 6000.
+        uns_fastapi_group_grouping_level (str): Grouping level for UNS-based FastAPI group services.
+            Determines how services are grouped, e.g., by "workcenter".
         log_level (str): Logging verbosity level for the service.
             Environment variable: `LOG_LEVEL`. Default: "info".
         environment (str): Environment the app is running in ("local" or "production").
@@ -114,6 +117,7 @@ class Settings(BaseSettings):
     fastapi_group_cpus_limit: float = Field(default=1, env="FASTAPI_GROUP_CPU_LIMIT")
     fastapi_group_cpus_reservation: float = Field(default=0.5, env="FASTAPI_GROUP_CPU_RESERVATION")
     fastapi_group_host_port_base: int = Field(default=6000, env="FASTAPI_GROUP_PORT_BASE")
+    uns_fastapi_group_grouping_level: str = Field(default='workcenter', env='UNS_FASTAPI_GROUP_GROUPING_LEVEL')
 
     # Miscellaneous
     log_level: str = Field(default="info", env="LOG_LEVEL")

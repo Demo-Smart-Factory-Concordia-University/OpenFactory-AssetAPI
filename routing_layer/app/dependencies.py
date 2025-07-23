@@ -23,6 +23,6 @@ from routing_layer.app.core.controller.swarm_deployment_platform import SwarmDep
 
 # Instantiate the routing controller with default grouping strategy and deployment backend
 routing_controller = RoutingController(
-    grouping_strategy=UNSLevelGroupingStrategy(grouping_level='workcenter'),
+    grouping_strategy=UNSLevelGroupingStrategy(),
     deployment_platform=SwarmDeploymentPlatform(),
 )

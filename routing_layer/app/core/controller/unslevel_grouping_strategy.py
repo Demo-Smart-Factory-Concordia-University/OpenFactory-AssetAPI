@@ -61,17 +61,17 @@ class UNSLevelGroupingStrategy(GroupingStrategy):
         Group names and UNS levels are escaped to prevent SQL injection.
     """
 
-    def __init__(self, grouping_level: str) -> None:
+    def __init__(self) -> None:
         """
         Initialize the strategy with a specific UNS level used for grouping.
 
-        Args:
-            grouping_level (str): The UNS level (e.g., 'workcenter', 'area') to use as the grouping key.
-
         Raises:
             RuntimeError: If the required UNS mapping table is not found or ksqlDB is unreachable.
+
+        Note::
+            Uses `Settings.uns_fastapi_group_grouping_level` (e.g., 'workcenter', 'area') as the grouping key.
         """
-        self.grouping_level = escape_ksql_literal(grouping_level)
+        self.grouping_level = escape_ksql_literal(settings.uns_fastapi_group_grouping_level)
 
         ready, reason = self.is_ready()
         if not ready:

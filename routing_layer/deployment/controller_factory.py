@@ -18,6 +18,6 @@ def create_routing_controller() -> RoutingController:
         RoutingController: Configured controller instance.
     """
     return RoutingController(
-        grouping_strategy=UNSLevelGroupingStrategy(grouping_level="workcenter"),
+        grouping_strategy=UNSLevelGroupingStrategy(),
         deployment_platform=SwarmDeploymentPlatform(),
     )
