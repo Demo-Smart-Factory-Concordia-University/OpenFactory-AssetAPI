@@ -135,6 +135,7 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
         # check if service is alreay deployed
         existing_services = self.docker_client.services.list(filters={"name": self._service_name(group_name)})
         if existing_services:
+            logger.info(f" 🔄 Swarm service for group '{group_name}' already running.")
             return
 
         logger.info(f" 🚀 Deploying Swarm service for group '{group_name}' using image '{settings.fastapi_group_image}'")
