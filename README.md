@@ -72,7 +72,7 @@ This allows:
 Default plugins include:
 
 * Grouping: `workcenter`
-* Deployment: `swarm`
+* Deployment: `swarm`, `docker`
 
 ---
 
