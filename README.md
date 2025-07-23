@@ -1,6 +1,6 @@
 # OpenFactory-AssetAPI — Serving Layer for Asset Data
 
-**OpenFactory-AssetAPI** is the core serving layer within the OpenFactory platform, designed to provide efficient access to real-time and computed asset data. It exposes both **state query** and **streaming endpoints** for developers and systems to retrieve asset telemetry and state information.
+**OpenFactory-AssetAPI** is the core serving layer within the [OpenFactory](https://github.com/Demo-Smart-Factory-Concordia-University/OpenFactory) platform, designed to provide efficient access to real-time and computed asset data. It exposes both **state query** and **streaming endpoints** for developers and systems to retrieve asset telemetry and state information.
 
 This service leverages a modular architecture with plugin-based grouping strategies and deployment platforms, enabling flexible and scalable data routing tailored to various production environments.
 
