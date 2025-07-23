@@ -137,7 +137,7 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
         if existing_services:
             return
 
-        logger.info(f"🚀 Deploying Swarm service for group '{group_name}' using image '{settings.fastapi_group_image}'")
+        logger.info(f" 🚀 Deploying Swarm service for group '{group_name}' using image '{settings.fastapi_group_image}'")
 
         # Default endpoint spec (no published port)
         endpoint_spec = None

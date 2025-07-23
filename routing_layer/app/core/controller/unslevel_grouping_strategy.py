@@ -183,7 +183,7 @@ class UNSLevelGroupingStrategy(GroupingStrategy):
         WHERE h.uns_levels['{self.grouping_level}'] = '{escape_ksql_literal(group_name)}';
         """
         pretty_statement = "\n".join("                  " + line.lstrip() for line in statement.strip().splitlines())
-        logger.info(f"  🔧 Creating derived stream for group {group_name}")
+        logger.info(f"🔧 Creating derived stream for group {group_name}")
         logger.debug(pretty_statement)
         ksql.statement_query(statement)
 
@@ -198,5 +198,5 @@ class UNSLevelGroupingStrategy(GroupingStrategy):
             None
         """
         statement = f"DROP STREAM {self._get_stream_name(group_name)} DELETE TOPIC;"
-        logger.info(f"    Removing derived stream with statement: {statement}")
+        logger.info(f" Removing derived stream with statement: {statement}")
         ksql.statement_query(statement)
