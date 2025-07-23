@@ -29,3 +29,6 @@ workcenter = "routing_layer.app.core.controller.unslevel_grouping_strategy:UNSLe
 
 [project.entry-points."openfactory.deployment_platforms"]
 swarm = "routing_layer.app.core.controller.swarm_deployment_platform:SwarmDeploymentPlatform"
+
+[project.scripts]
+manage = "routing_layer.manage:main"
