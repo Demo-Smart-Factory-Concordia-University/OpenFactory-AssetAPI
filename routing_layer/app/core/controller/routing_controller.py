@@ -49,6 +49,7 @@ class RoutingController:
         for all currently known groups.
         """
         logger.info("Initializing Routing Layer...")
+        self.deployment_platform.initialize()
         for group in self.grouping_strategy.get_all_groups():
             logger.info(f"Spin up group [{group}]")
             self.grouping_strategy.create_derived_stream(group)
@@ -67,6 +68,7 @@ class RoutingController:
         Tear down the routing layer by removing all group-specific streams and services.
         """
         logger.info("Stopping Routing Layer...")
+        self.deployment_platform.initialize()
         for group in self.grouping_strategy.get_all_groups():
             logger.info(f"  Tearing down group [{group}]")
             self.grouping_strategy.remove_derived_stream(group)

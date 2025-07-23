@@ -2,23 +2,19 @@
 Dependency Initialization Module for OpenFactory Routing Layer.
 
 This module defines shared, singleton-style dependencies used throughout the
-Routing Layer application. It sets up:
+Routing Layer application.
 
-- A Docker client for interacting with the host's Docker or Swarm environment.
-- A `RoutingController` instance configured with:
-    - A UNS-level-based grouping strategy (e.g., grouping by 'workcenter').
-    - A Swarm-based deployment platform for group-specific FastAPI services.
+It sets up a `RoutingController` instance configured with:
+  - A UNS-level-based grouping strategy (e.g., grouping by 'workcenter').
+  - A Swarm-based deployment platform for group-specific FastAPI services.
 
-These instances are imported by other parts of the application, such as the
+This instance is imported by other parts of the application, such as the
 FastAPI main entrypoint and endpoint routers.
 
 Note:
     The dependencies are instantiated at module load time.
     This design is suitable for FastAPI apps where objects remain active
     across the app lifecycle.
-
-Raises:
-    docker.errors.DockerException: If Docker is not available or misconfigured.
 """
 
 from routing_layer.app.core.controller.routing_controller import RoutingController

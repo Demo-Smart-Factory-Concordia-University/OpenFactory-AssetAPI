@@ -49,6 +49,26 @@ class DeploymentPlatform(ABC):
 
     Subclasses must implement these methods using the underlying infrastructure (e.g., Docker, k8s).
     """
+
+    @abstractmethod
+    def initialize(self) -> None:
+        """
+        Initialize the deployment platform.
+
+        This method is called once during the deployment and teardown phase by the `RoutingController`.
+        It is responsible for preparing the deployment backend, such as validating
+        environment setup, establishing connections, or verifying infrastructure state
+        (e.g., checking Swarm mode or Kubernetes connectivity).
+
+        Important:
+            Subclasses must override this method to perform any setup required before deploying
+            services.
+
+        Raises:
+            NotImplementedError: If not implemented in a subclass.
+        """
+        raise NotImplementedError("initialize() must be implemented by subclasses.")
+
     @abstractmethod
     def deploy_service(self, group_name: str) -> None:
         """

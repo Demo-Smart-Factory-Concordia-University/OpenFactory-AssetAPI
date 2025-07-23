@@ -30,16 +30,13 @@ Note:
       group name to maintain uniqueness and DNS-safe formatting.
 """
 
-from routing_layer.app.core.controller.deployment_platform import DeploymentPlatform
-
-
 import re
 import docker
 import docker.errors
-from docker import DockerClient
 from docker.types import EndpointSpec
 from routing_layer.app.config import settings
 from routing_layer.app.core.logger import get_logger
+from routing_layer.app.core.controller.deployment_platform import DeploymentPlatform
 
 
 logger = get_logger(__name__)
@@ -59,30 +56,26 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
           `docker_client` is provided.
     """
 
-    def __init__(self, docker_client: DockerClient = None) -> None:
+    def initialize(self) -> None:
         """
         Initialize the Swarm deployment backend.
 
-        If `docker_client` is not None, checks that:
-          - The Docker Engine is reachable
-          - Swarm mode is active
-          - The current node is a Swarm manager
+        Establishes a connection to the local Docker Engine and performs the following checks:
+            - The Docker Engine is reachable.
+            - Docker Swarm mode is active on the node.
+            - The current node has Swarm manager privileges.
 
-        If any of these are not satisfied, an exception is raised.
-
-        Args:
-            docker_client (DockerClient): Optional Docker SDK client instance.
+        If any of these conditions are not met, a RuntimeError is raised.
 
         Raises:
-            RuntimeError: If Docker is unreachable or Swarm is not active/manager node.
+            RuntimeError: If the Docker Engine is unreachable, Swarm mode is inactive,
+                          or the node is not a Swarm manager.
 
         Note:
-            During the running phase, `docker_client` must be set to None.
+            This method is intended to be called **only** during the deployment and teardown phases
+            by the `RoutingController`.
         """
-        self.docker_client = docker_client
-
-        if docker_client is None:
-            return
+        self.docker_client = docker.from_env()
 
         try:
             self.docker_client.ping()
@@ -144,7 +137,7 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
         if existing_services:
             return
 
-        logger.info(f"  🚀 Deploying Swarm service for group '{group_name}' using image '{settings.fastapi_group_image}'")
+        logger.info(f"🚀 Deploying Swarm service for group '{group_name}' using image '{settings.fastapi_group_image}'")
 
         # Default endpoint spec (no published port)
         endpoint_spec = None
@@ -180,7 +173,7 @@ class SwarmDeploymentPlatform(DeploymentPlatform):
         Args:
             group_name (str): The name of the group whose service should be removed.
         """
-        logger.info(f"    Removing Swarm service for group '{group_name}'")
+        logger.info(f"  Removing Swarm service for group '{group_name}'")
         try:
             service = self.docker_client.services.get(self._service_name(group_name))
             service.remove()

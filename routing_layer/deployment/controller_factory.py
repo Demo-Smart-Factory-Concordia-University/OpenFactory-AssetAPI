@@ -8,7 +8,6 @@ runtime initialization scripts.
 from routing_layer.app.core.controller.routing_controller import RoutingController
 from routing_layer.app.core.controller.grouping_strategy import UNSLevelGroupingStrategy
 from routing_layer.app.core.controller.swarm_deployment_platform import SwarmDeploymentPlatform
-import docker
 
 
 def create_routing_controller() -> RoutingController:
@@ -18,9 +17,7 @@ def create_routing_controller() -> RoutingController:
     Returns:
         RoutingController: Configured controller instance.
     """
-    docker_client = docker.from_env()
-
     return RoutingController(
         grouping_strategy=UNSLevelGroupingStrategy(grouping_level="workcenter"),
-        deployment_platform=SwarmDeploymentPlatform(docker_client=docker_client),
+        deployment_platform=SwarmDeploymentPlatform(),
     )
