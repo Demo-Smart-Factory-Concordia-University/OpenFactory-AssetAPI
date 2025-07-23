@@ -13,7 +13,12 @@ dependencies = [
     "pydantic-settings",
     "sse-starlette",
     "fastapi",
-    "uvicorn"
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "flake8"
 ]
 
 [tool.setuptools]
