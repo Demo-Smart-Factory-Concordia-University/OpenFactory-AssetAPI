@@ -5,6 +5,7 @@ This project supports **Visual Studio Code Remote Containers**, using a pre-conf
 ✅ Automatically installs Python 3.12 and dev tools  
 ✅ Sets up the required environment variables  
 ✅ Installs and exposes the `openfactory-sdk` for managing local Kafka/ksqlDB instances  
+✅ Provides a [Virtual Factory](#4-start-the-virtual-factory) to generate data to feed the OpenFactory-AssetAPI  
 ✅ Enables you to use `manage deploy`, `manage runserver`, and `manage teardown` without manual setup
 
 ---
@@ -115,12 +116,21 @@ To stop the virtual factory:
 
 ### 5. Run the AssetAPI Application
 
-Once the infrastructure and virtual devices are up, you can start the AssetAPI:
+Once the infrastructure and virtual devices are running, you can manage the AssetAPI with the following commands:
 
 ```bash
 manage deploy       # Set up ksqlDB streams and topics
 manage runserver    # Start the FastAPI service
 manage teardown     # Clean up application resources
+```
+To change the logging level, set the LOG_LEVEL environment variable:
+```bash
+LOG_LEVEL=debug manage runserver
+```
+
+After the AssetAPI is running, you can stream data from the deployed devices on OpenFactory using:
+```
+curl localhost:5555/asset_stream?asset_uuid=VIRTUAL-TEMP-SENS-001
 ```
 
 ---
@@ -157,5 +167,6 @@ You can customize this to add more packages, extensions, or tools as needed.
 
 ## 🛠 Troubleshooting
 
-* **Volume permission issues on Linux**: Make sure Docker is configured with correct user permissions.
-* **Container doesn't start?** Ensure Docker Desktop is running and WSL 2 is enabled (on Windows).
+* **Volume permission issues on Linux**: Ensure Docker is configured with the correct user permissions. You may need to add your user to the `docker` group or adjust file system permissions.
+* **Container doesn't start?** Make sure Docker Desktop is running and that WSL 2 is enabled (for Windows users).
+* **Virtual factory doesn't deploy?** After running `spinup` to start Kafka and ksqlDB, wait a few minutes to allow all streams and tables to initialize before proceeding.
