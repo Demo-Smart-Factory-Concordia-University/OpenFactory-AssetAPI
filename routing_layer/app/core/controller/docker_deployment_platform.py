@@ -178,5 +178,5 @@ class DockerDeploymentPlatform(DeploymentPlatform):
             str: URL like http://localhost:<port>
         """
         if settings.environment == "local":
-            return f"http://{settings.swarm_node_host}:{self._get_host_port(group_name)}"
+            return f"http://localhost:{self._get_host_port(group_name)}"
         return f"http://{self._container_name(group_name)}:5555"
