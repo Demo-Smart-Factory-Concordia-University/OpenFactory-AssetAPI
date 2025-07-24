@@ -1,0 +1,53 @@
+# Docker Compose project for setting up the Virtual Factory
+#
+# This compose file launches multiple instances of the virtual temperature sensor
+# adapter, each configured with different environment variables.
+#
+# Ports exposed on the host (e.g., 7871, 7872) are intended solely for
+# debugging and direct access to individual sensor adapters via tools like telnet.
+# These port mappings are not required for normal inter-container communication
+# within the virtual factory, which relies on the shared Docker network `factory-net`.
+#
+# Usage:
+#   Deploy the virtual adapters:
+#     docker compose up -d
+#
+#   Tear down the virtual adapters:
+#     docker compose down
+#
+# After deployment, you can connect for debugging, for example:
+#   telnet localhost 7871
+#
+# This will stream temperature data from the first virtual sensor instance.
+#
+
+services:
+  virtual-temp-sens-001:
+    image: virtual-temp-sensor
+    environment:
+      - SLEEP_INTERVAL=2.0
+      - MIN_TEMP=100
+      - MAX_TEMP=120
+      - ADAPTER_PORT=7878
+    ports:
+      - "7871:7878"
+    networks:
+      - factory-net
+
+  virtual-temp-sens-002:
+    image: virtual-temp-sensor
+    environment:
+      - SLEEP_INTERVAL=4.0
+      - MIN_TEMP=200
+      - MAX_TEMP=220
+      - ADAPTER_PORT=7878
+    ports:
+      - "7872:7878"
+    networks:
+      - factory-net
+
+networks:
+
+  factory-net:
+    name: factory-net
+    external: true

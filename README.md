@@ -1,10 +1,13 @@
 # OpenFactory-AssetAPI — Serving Layer for Asset Data
 
+[![Dev Container Ready](https://img.shields.io/badge/devcontainer-ready-green?logo=visualstudiocode&labelColor=2c2c2c)](https://containers.dev)
+![Python Version](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)
+![License](https://img.shields.io/github/license/Demo-Smart-Factory-Concordia-University/OpenFactory-AssetAPI)
+![Pre-Release](https://img.shields.io/badge/release-pre--release-yellow)
+
 **OpenFactory-AssetAPI** is the core serving layer within the [OpenFactory](https://github.com/Demo-Smart-Factory-Concordia-University/OpenFactory) platform, designed to provide efficient access to real-time and computed asset data. It exposes both **state query** and **streaming endpoints** for developers and systems to retrieve asset telemetry and state information.
 
 This service leverages a modular architecture with plugin-based grouping strategies and deployment platforms, enabling flexible and scalable data routing tailored to various production environments.
-
-> ⚠️ **Note:** This is primarily a development and experimental repository, intended for prototyping and testing new concepts.
 
 ---
 
