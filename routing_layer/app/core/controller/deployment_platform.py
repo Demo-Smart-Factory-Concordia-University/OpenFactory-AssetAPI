@@ -22,7 +22,7 @@ from routing_layer.app.config import settings
 from routing_layer.app.core.logger import get_logger
 
 
-logger = get_logger(__name__)
+logger = get_logger("uvicorn.error")
 
 
 class DeploymentPlatform(ABC):
@@ -170,6 +170,7 @@ class DeploymentPlatform(ABC):
         try:
             url = self.get_service_url(group_name)
             readiness_url = f"{url.rstrip('/')}/ready"
+            logger.debug(f"[DeploymentPlatform] check readiness of group {group_name}: {readiness_url}")
             response = httpx.get(readiness_url, timeout=2.0)
             if response.status_code == 404:
                 return False, "Service does not expose a /ready endpoint (404 Not Found)"
