@@ -83,12 +83,14 @@ Default plugins include:
 Use the `manage` command for common tasks:
 
 ```bash
+manage deploy       # initialize streams and resources
 manage runserver    # start the API server
 manage teardown     # stop deployed services and clean up
-manage setup        # initialize streams and resources
 ```
 
 *(Requires installation in editable mode: `pip install -e .`)*
+
+> 🔧 For a zero-config local dev environment using Docker and VS Code, see [Development Container Setup](./docs/devcontainer.md)
 
 ### Linting
 

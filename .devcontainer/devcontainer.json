@@ -1,0 +1,28 @@
+{
+  "name": "OpenFactory-AssetAPI — Serving Layer for Asset Data",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "docker-in-docker": {
+      "version": "latest"
+    },
+    "ghcr.io/demo-smart-factory-concordia-university/openfactory-sdk/infra:0.0.6": {
+      "openfactory-version": "main"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "containerEnv": {
+    "ENVIRONMENT": "local",
+    "DEPLOYMENT_PLATFORM": "docker"
+  },
+  "postCreateCommand": "pip install -e .[dev]"
+}
