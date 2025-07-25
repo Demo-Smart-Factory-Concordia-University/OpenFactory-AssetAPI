@@ -3,7 +3,8 @@ Local Docker Deployment Backend for OpenFactory Routing Layer.
 
 This module implements the `DockerDeploymentPlatform`, a deployment backend
 using standard Docker containers (non-Swarm). It enables launching and removing
-per-group FastAPI services directly on the local host.
+per-group FastAPI services, the central routing layer API, and the State API directly
+on the local host or development machine.
 
 Intended for:
     - Local development or testing environments without Docker Swarm.
@@ -11,13 +12,21 @@ Intended for:
 
 Features:
     - Group-specific FastAPI services are launched as individual containers.
-    - CPU limits, environment variables, and networking are configured per container.
-    - Routing is handled via published host ports in `local` mode.
+    - Central routing layer API deployment for handling asset stream routing.
+    - Centralized State API deployment for querying asset state via materialized views.
+    - Environment-aware endpoint resolution in 'local' mode (uses host ports).
+    - CPU limits, environment variables, and internal networking per container.
 
 Dependencies:
-    - docker (Docker SDK for Python)
-    - routing_layer.app.config.settings
-    - logging via get_logger
+    - Docker SDK for Python (`docker`)
+    - `routing_layer.app.config.settings`
+    - Custom logging via `get_logger`
+
+Notes:
+    - Group service containers are named "stream-api-group-<group_name>".
+    - Routing layer container is named "serving-layer-router".
+    - State API container is named "openfactory-state-api".
+    - Default service port is 5555 for all components.
 """
 
 import re
@@ -180,3 +189,66 @@ class DockerDeploymentPlatform(DeploymentPlatform):
         if settings.environment == "local":
             return f"http://localhost:{self._get_host_port(group_name)}"
         return f"http://{self._container_name(group_name)}:5555"
+
+    def deploy_state_api(self) -> None:
+        """
+        Deploy the centralized State API as a Docker container.
+        """
+        container_name = "openfactory-state-api"
+
+        try:
+            self.docker_client.containers.get(container_name)
+            logger.info("✅ State API already running.")
+            return
+        except docker.errors.NotFound:
+            pass
+
+        logger.info("🚀 Deploying State API container")
+
+        env_vars = {
+            "KSQLDB_URL": settings.ksqldb_url,
+            "KSQLDB_ASSETS_TABLE": settings.ksqldb_assets_table,
+            "LOG_LEVEL": settings.log_level
+        }
+
+        ports = {"5555/tcp": 5556} if settings.environment == "local" else {}
+
+        try:
+            self.docker_client.containers.run(
+                image=settings.state_api_image,
+                name=container_name,
+                detach=True,
+                network=settings.docker_network,
+                ports=ports,
+                environment=env_vars,
+                cpu_quota=int(100000 * settings.state_api_cpus_limit),
+                cpu_period=100000,
+            )
+        except docker.errors.APIError as e:
+            logger.error(f"💥 Docker error launching State API: {e}")
+
+    def remove_state_api(self) -> None:
+        """
+        Remove the State API Docker container.
+        """
+        logger.info("Removing State API container")
+        try:
+            container = self.docker_client.containers.get("openfactory-state-api")
+            container.stop()
+            container.remove()
+        except docker.errors.NotFound:
+            logger.warning("⚠️  State API container not found.")
+        except docker.errors.APIError as e:
+            logger.error(f"💥  Docker error removing State API: {e}")
+
+    def get_state_api_url(self) -> str:
+        """
+        Return the resolved internal or local URL of the State API.
+
+        Returns:
+            str: URL like http://localhost:5555 or internal Docker network address.
+        """
+        if settings.environment == "local":
+            logger.info("Using local override for State API URL")
+            return "http://localhost:5556"
+        return "http://openfactory-state-api:5555"

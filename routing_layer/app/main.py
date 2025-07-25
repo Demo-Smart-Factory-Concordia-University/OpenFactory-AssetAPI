@@ -32,6 +32,9 @@ Exposed Endpoints:
     - GET /asset_stream?asset_uuid=...:
         Main endpoint for clients to subscribe to asset events. Requests are
         dynamically routed to the appropriate group service.
+
+    - GET /asset_state?asset_uuid=...:
+        Routes asset state queries to the centralized Asset State API.
 """
 
 import uvicorn
@@ -42,6 +45,7 @@ from typing import Dict
 from routing_layer.app.config import settings
 from routing_layer.app.dependencies import routing_controller
 from routing_layer.app.api.router_asset import router as assets_router
+from routing_layer.app.api.router_asset_state import router as asset_state_router
 
 
 app = FastAPI(
@@ -106,6 +110,7 @@ async def get_app_info() -> JSONResponse:
 
 
 app.include_router(assets_router)
+app.include_router(asset_state_router)
 
 if __name__ == "__main__":
     uvicorn.run("routing_layer.app.main:app",

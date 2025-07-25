@@ -207,3 +207,38 @@ class DeploymentPlatform(ABC):
         base = settings.fastapi_group_host_port_base
         h = int(hashlib.md5(group_name.encode()).hexdigest(), 16)
         return base + (h % 1000)  # Allows for up to 1000 unique ports
+
+    @abstractmethod
+    def deploy_state_api(self) -> None:
+        """
+        Deploy the centralized State API service.
+
+        This service exposes the asset state via an HTTP API, typically backed by a materialized view
+        such as ksqlDB or Kafka Streams.
+
+        Important:
+            This method must be implemented by subclasses.
+        """
+        raise NotImplementedError("deploy_state_api() must be implemented by subclasses.")
+
+    @abstractmethod
+    def remove_state_api(self) -> None:
+        """
+        Remove the centralized State API service.
+
+        Important:
+            This method must be implemented by subclasses.
+        """
+        raise NotImplementedError("remove_state_api() must be implemented by subclasses.")
+
+    @abstractmethod
+    def get_state_api_url(self) -> str:
+        """
+        Retrieve the service URL for the State API.
+
+        Used by the routing layer to forward requests to the asset state endpoint.
+
+        Returns:
+            str: The resolved URL of the State API service.
+        """
+        raise NotImplementedError("get_state_api_url() must be implemented by subclasses.")

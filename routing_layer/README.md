@@ -67,11 +67,12 @@ Configured via environment variables (typically via a shared `.env` file):
 
 ### 🔌 Kafka & ksqlDB
 
-| Variable               | Description                                              | Required                                 |
-| ---------------------- | -------------------------------------------------------- | ---------------------------------------- |
+| Variable               | Description                                              | Required                                  |
+| ---------------------- | -------------------------------------------------------- | ----------------------------------------- |
 | `KAFKA_BROKER`         | Kafka bootstrap server address (e.g., `localhost:9092`)  | ✅ Yes                                    |
 | `KSQLDB_URL`           | URL of the ksqlDB server (e.g., `http://localhost:8088`) | ✅ Yes                                    |
 | `KSQLDB_ASSETS_STREAM` | Name of the ksqlDB stream with enriched asset data       | ❌ No (default: `enriched_assets_stream`) |
+| `KSQLDB_ASSETS_TABLE`  | Name of the table containing assets states               | ❌ No (default: `assets`)                 |
 | `KSQLDB_UNS_MAP`       | Name of the ksqlDB table mapping assets to UNS hierarchy | ❌ No (default: `asset_to_uns_map`)       |
 
 ### 🐳 Docker & Swarm
@@ -83,28 +84,40 @@ Configured via environment variables (typically via a shared `.env` file):
 
 ### 🚦 Routing Layer
 
-| Variable                        | Description                                    | Required                             |
-| ------------------------------- | ---------------------------------------------- | ------------------------------------ |
-| `ROUTING_LAYER_IMAGE`           | Docker image for the central routing layer API | ❌ No (default: `ofa/routing-layer`) |
-| `ROUTING_LAYER_REPLICAS`        | Number of routing layer replicas               | ❌ No (default: `1`)                 |
-| `ROUTING_LAYER_CPU_LIMIT`       | CPU limit per routing layer container          | ❌ No (default: `1`)                 |
-| `ROUTING_LAYER_CPU_RESERVATION` | CPU reservation per routing layer container    | ❌ No (default: `0.5`)               |
+| Variable                        | Description                                        | Required                             |
+| ------------------------------- | -------------------------------------------------- | ------------------------------------ |
+| `ROUTING_LAYER_IMAGE`           | Docker image for the central routing layer API     | ❌ No (default: `ghcr.io/.../routing-layer:latest`) |
+| `ROUTING_LAYER_REPLICAS`        | Number of routing layer replicas                   | ❌ No (default: `1`)                 |
+| `ROUTING_LAYER_CPU_LIMIT`       | CPU limit per routing layer container              | ❌ No (default: `1`)                 |
+| `ROUTING_LAYER_CPU_RESERVATION` | CPU reservation per routing layer container        | ❌ No (default: `0.5`)               |
+| `GROUPING_STRATEGY`             | Strategy used to group assets (e.g., `workcenter`) | ❌ No (default: `workcenter`)        |
+| `DEPLOYMENT_PLATFORM`           | Deployment mode: `swarm` or `docker`               | ❌ No (default: `swarm`)             |
 
 ### 🧩 FastAPI Group Services
 
-| Variable                        | Description                                                    | Required                                            |
-| ------------------------------- | -------------------------------------------------------------- | --------------------------------------------------- |
-| `FASTAPI_GROUP_IMAGE`           | Docker image for group services                                | ❌ No (default: `openfactory/fastapi-group:latest`) |
-| `FASTAPI_GROUP_REPLICAS`        | Number of group service replicas                               | ❌ No (default: `3`)                                |
-| `FASTAPI_GROUP_CPU_LIMIT`       | CPU limit per group container                                  | ❌ No (default: `1`)                                |
-| `FASTAPI_GROUP_CPU_RESERVATION` | CPU reservation per group container                            | ❌ No (default: `0.5`)                              |
-| `FASTAPI_GROUP_PORT_BASE`       | Base port for exposing group services during local development | ❌ No (default: `6000`)                             |
+| Variable                           | Description                                                    | Required                                            |
+| ---------------------------------- | -------------------------------------------------------------- | --------------------------------------------------- |
+| `FASTAPI_GROUP_IMAGE`              | Docker image for group services                                | ❌ No (default: `ghcr.io/.../stream-api-non-replicated:latest`) |
+| `FASTAPI_GROUP_REPLICAS`           | Number of group service replicas                               | ❌ No (default: `1`)                                |
+| `FASTAPI_GROUP_CPU_LIMIT`          | CPU limit per group container                                  | ❌ No (default: `1`)                                |
+| `FASTAPI_GROUP_CPU_RESERVATION`    | CPU reservation per group container                            | ❌ No (default: `0.5`)                              |
+| `FASTAPI_GROUP_PORT_BASE`          | Base port for exposing group services during local development | ❌ No (default: `6000`)                             |
+| `UNS_FASTAPI_GROUP_GROUPING_LEVEL` | Grouping level for UNS-based FastAPI services                  | ❌ No (default: `workcenter`)                       |
+
+### 🔄 Asset State API
+
+| Variable                    | Description                                     | Required                                        |
+| --------------------------- | ----------------------------------------------- | ----------------------------------------------- |
+| `STATE_API_IMAGE`           | Docker image for the asset state API service    | ❌ No (default: `ghcr.io/.../state-api:latest`) |
+| `STATE_API_REPLICAS`        | Number of replicas for the state API            | ❌ No (default: `1`)                            |
+| `STATE_API_CPU_LIMIT`       | CPU limit per container for the state API       | ❌ No (default: `0.5`)                          |
+| `STATE_API_CPU_RESERVATION` | CPU reservation per container for the state API | ❌ No (default: `0.25`)                         |
 
 ### 🛠️ Miscellaneous
 
 | Variable      | Description                                                     | Required                      |
 | ------------- | --------------------------------------------------------------- | ----------------------------- |
-| `ENVIRONMENT` | App environment (`local`, `devswarm` or `production`)           | ❌ No (default: `production`) |
+| `ENVIRONMENT` | App environment (`local`, `devswarm`, or `production`)          | ❌ No (default: `production`) |
 | `LOG_LEVEL`   | Logging level (`debug`, `info`, `warning`, `error`, `critical`) | ❌ No (default: `info`)       |
 
 ---
@@ -153,26 +166,31 @@ This will start the API server at `http://localhost:5555` using the environment 
 routing_layer/
 ├── app/
 │   ├── api/
-│   │   └── router_asset.py             # FastAPI route handling asset requests
-│   ├── config.py                       # Environment variables and ksqlDB client config
+│   │   ├── router_asset.py                     # FastAPI route handling asset requests
+│   │   └── router_asset_state.py               # FastAPI route proxying asset state API
+│   ├── config.py                               # Environment variables and ksqlDB client config
 │   ├── core/
 │   │   ├── controller/
-│   │   │   ├── deployment_platform.py  # Abstract & Swarm-based deployment logic
-│   │   │   ├── grouping_strategy.py    # Grouping strategies (e.g., UNS-based)
-│   │   │   ├── routing_controller.py   # Orchestrates grouping and deployment
+│   │   │   ├── deployment_platform.py          # Abstract base for deployment logic
+│   │   │   ├── docker_deployment_platform.py   # Docker (non-Swarm) deployment logic
+│   │   │   ├── swarm_deployment_platform.py    # Swarm-based deployment logic
+│   │   │   ├── grouping_strategy.py            # Abstract Grouping strategies
+│   │   │   ├── unslevel_grouping_strategy.py   # UNS-level grouping strategy
+│   │   │   ├── routing_controller.py           # Orchestrates grouping and deployment
 │   │   │   └── __init__.py
-│   │   ├── logger.py                   # Central logging setup
-│   │   ├── proxy.py                    # Local proxy utilities
+│   │   ├── logger.py                           # Central logging setup
+│   │   ├── proxy.py                            # Local proxy utilities
+│   │   ├── utils.py                            # Utility helpers
 │   │   └── __init__.py
-│   ├── dependencies.py                 # Dependency injection for FastAPI routes
-│   └── main.py                         # FastAPI app setup
+│   ├── dependencies.py                         # Dependency injection for FastAPI routes
+│   └── main.py                                 # FastAPI app setup
 ├── deployment/
-│   ├── controller_factory.py           # Builds controller instances for deployment
-│   ├── deploy.py                       # CLI entry for deploying group services
-│   └── teardown.py                     # CLI entry for removing services
-├── docker-compose.yml                  # Local development orchestration
-├── Dockerfile                          # Docker build config for routing layer
-├── manage.py                           # Unified CLI for managing the app
-├── requirements.txt                    # Python dependencies
-└── README.md                           # This file
+│   ├── controller_factory.py                   # Builds controller instances for deployment
+│   ├── deploy.py                               # CLI entry for deploying group services
+│   └── teardown.py                             # CLI entry for removing services
+├── docker-compose.yml                          # Local development orchestration
+├── Dockerfile                                  # Docker build config for routing layer
+├── manage.py                                   # Unified CLI for managing the app
+├── requirements.txt                            # Python dependencies
+└── README.md                                   # This file
 ```

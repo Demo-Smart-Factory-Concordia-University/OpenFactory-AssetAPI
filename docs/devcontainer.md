@@ -129,8 +129,12 @@ LOG_LEVEL=debug manage runserver
 ```
 
 After the AssetAPI is running, you can stream data from the deployed devices on OpenFactory using:
-```
+```bash
 curl localhost:5555/asset_stream?asset_uuid=VIRTUAL-TEMP-SENS-001
+```
+Or obtain it's state:
+```bash
+curl localhost:5555/asset_state?asset_uuid=VIRTUAL-TEMP-SENS-001 | jq
 ```
 
 ---
