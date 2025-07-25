@@ -6,7 +6,7 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/demo-smart-factory-concordia-university/openfactory-sdk/infra:0.0.6": {
+    "ghcr.io/demo-smart-factory-concordia-university/openfactory-sdk/infra:0.0.8": {
       "openfactory-version": "main"
     }
   },
