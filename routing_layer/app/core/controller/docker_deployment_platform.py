@@ -90,6 +90,7 @@ class DockerDeploymentPlatform(DeploymentPlatform):
             "KAFKA_BROKER": settings.kafka_broker,
             "KAFKA_TOPIC": f"asset_stream_{group_name}_topic",
             "KAFKA_CONSUMER_GROUP_ID": f"asset_stream_{group_name}_consumer_group",
+            "DEPLOYMENT_PLATFORM": "docker"
         }
 
         try:
@@ -146,6 +147,7 @@ class DockerDeploymentPlatform(DeploymentPlatform):
             "KSQLDB_UNS_MAP": settings.ksqldb_uns_map,
             "LOG_LEVEL": settings.log_level,
             "ENVIRONMENT": "production",
+            "DEPLOYMENT_PLATFORM": "docker"
         }
 
         try:
@@ -208,7 +210,8 @@ class DockerDeploymentPlatform(DeploymentPlatform):
         env_vars = {
             "KSQLDB_URL": settings.ksqldb_url,
             "KSQLDB_ASSETS_TABLE": settings.ksqldb_assets_table,
-            "LOG_LEVEL": settings.log_level
+            "LOG_LEVEL": settings.log_level,
+            "DEPLOYMENT_PLATFORM": "docker"
         }
 
         ports = {"5555/tcp": 5556} if settings.environment == "local" else {}
