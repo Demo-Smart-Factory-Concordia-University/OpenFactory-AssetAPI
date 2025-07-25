@@ -9,6 +9,7 @@ grouping strategies and deployment platforms. It is responsible for:
 - Handling incoming client requests and routing them to the appropriate group service
 """
 
+import httpx
 from typing import Optional, Tuple, Dict
 from routing_layer.app.core.logger import get_logger
 from routing_layer.app.config import settings
@@ -73,6 +74,8 @@ class RoutingController:
             logger.info(f"Spin up group [{group}]")
             self.grouping_strategy.create_derived_stream(group)
             self.deployment_platform.deploy_service(group)
+        logger.info("Spin up State-API")
+        self.deployment_platform.deploy_state_api()
         logger.info("✅ Routing Layer initialization complete.")
 
     def deploy(self) -> None:
@@ -92,6 +95,8 @@ class RoutingController:
             logger.info(f"  Tearing down group [{group}]")
             self.grouping_strategy.remove_derived_stream(group)
             self.deployment_platform.remove_service(group)
+        logger.info("  Tearing State-API")
+        self.deployment_platform.remove_state_api()
         if settings.environment != 'local':
             self.deployment_platform.remove_routing_layer_api()
         logger.info("✅ Routing Layer removal complete.")
@@ -148,5 +153,20 @@ class RoutingController:
             healthy, msg = self.deployment_platform.check_service_ready(group)
             if not healthy:
                 issues[f"service:{group}"] = msg
+
+        # Check readiness status of state API
+        state_url = self.deployment_platform.get_state_api_url()
+        try:
+            response = httpx.get(f"{state_url.rstrip('/')}/ready", timeout=2.0)
+            if response.status_code == 404:
+                issues["state_api"] = "No /ready endpoint defined"
+            elif response.status_code != 200:
+                issues["state_api"] = f"Status code {response.status_code}"
+            else:
+                data = response.json()
+                if data.get("status") != "ready":
+                    issues["state_api"] = "Reported not ready"
+        except Exception as e:
+            issues["state_api"] = f"{state_url} not reachable: {e}"
 
         return (len(issues) == 0, issues)
