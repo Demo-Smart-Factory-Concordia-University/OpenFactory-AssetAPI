@@ -56,7 +56,7 @@ Platform & Deployment Strategy:
     - `GROUPING_STRATEGY`: Asset grouping strategy, e.g., "workcenter" (default: "workcenter")
 
 Environment & Logging:
-    - `ENVIRONMENT`: Current environment ("local", "devswarm", or "production"; default: "production")
+    - `ENVIRONMENT`: Current environment ("local", "dev", "devswarm", or "production"; default: "production")
     - `LOG_LEVEL`: Logging level ("debug", "info", "warning", "error", "critical"; default: "info")
 """
 
@@ -119,7 +119,7 @@ class Settings(BaseSettings):
             Environment variable: `STATE_API_CPU_RESERVATION`. Default: 0.25.
         log_level (str): Logging verbosity level for the service.
             Environment variable: `LOG_LEVEL`. Default: "info".
-        environment (str): Environment the app is running in ("local", "devswarm", or "production").
+        environment (str): Environment the app is running in ("local", "dev", "devswarm", or "production").
             Environment variable: `ENVIRONMENT`. Default: "production".
         grouping_strategy (str): Strategy for grouping assets (e.g., "workcenter").
             Environment variable: `GROUPING_STRATEGY`. Default: "workcenter".
@@ -189,7 +189,7 @@ class Settings(BaseSettings):
     @field_validator("environment")
     @classmethod
     def validate_environment(cls, v):
-        allowed = {"local", "devswarm", "production"}
+        allowed = {"local", "dev", "devswarm", "production"}
         if v.lower() not in allowed:
             raise ValueError(f"environment must be one of {allowed}")
         return v.lower()
