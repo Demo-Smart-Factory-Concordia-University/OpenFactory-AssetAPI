@@ -53,6 +53,7 @@ async def route_asset_state(request: Request, asset_uuid: str) -> JSONResponse:
 
     # Get the base URL from the deployment platform
     target_base_url: Optional[str] = routing_controller.deployment_platform.get_state_api_url()
+    logger.debug(f"[router] Baser URL: {target_base_url}")
     if not target_base_url:
         logger.error("[router] Asset State API route could not be resolved.")
         raise HTTPException(status_code=404, detail="Asset State API not available.")
