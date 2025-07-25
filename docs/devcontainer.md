@@ -123,10 +123,21 @@ manage deploy       # Set up ksqlDB streams and topics
 manage runserver    # Start the FastAPI service
 manage teardown     # Clean up application resources
 ```
+> **Note:** The Docker images defined in `Settings.fastapi_group_image` and in `Settings.state_api_image`
+> must be available locally inside the devcontainer or in a remote registry such 
+> as [GitHub Container Registry (ghcr)](https://ghcr.io) to be pulled during deployment.
+
 To change the logging level, set the LOG_LEVEL environment variable:
 ```bash
 LOG_LEVEL=debug manage runserver
 ```
+
+To deploy the AssetAPI in a container, use
+```bash
+ENVIRONMENT=dev manage deploy    # Set up ksqlDB streams and topics and deploys the AssetAPI
+ENVIRONMENT=dev manage teardown  # Clean up application resources
+```
+> **Note:** The Docker image defined in `Settings.state_api_image` must be available locally inside the devcontainer or in a remote registry such as [GitHub Container Registry (ghcr)](https://ghcr.io) to be pulled during deployment.
 
 After the AssetAPI is running, you can stream data from the deployed devices on OpenFactory using:
 ```bash
