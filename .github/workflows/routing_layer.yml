@@ -55,7 +55,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./routing_layer/
+          context: .
           file: ./routing_layer/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
