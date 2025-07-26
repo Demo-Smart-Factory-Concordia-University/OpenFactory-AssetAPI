@@ -116,18 +116,22 @@ To stop the virtual factory:
 
 ### 5. Run the AssetAPI Application
 
-Once the infrastructure and virtual devices are running, you can manage the AssetAPI with the following commands:
+First, the Docker images required by the AssetAPI must be built:
+```bash
+manage build
+```
+> **Note:** Re-run this command whenever you modify the source code of any component during development.
+
+Once the infrastructure and virtual devices are running and the images are built,
+you can manage the AssetAPI with the following commands:
 
 ```bash
 manage deploy       # Set up ksqlDB streams and topics
 manage runserver    # Start the FastAPI service
 manage teardown     # Clean up application resources
 ```
-> **Note:** The Docker images defined in `Settings.fastapi_group_image` and in `Settings.state_api_image`
-> must be available locally inside the devcontainer or in a remote registry such 
-> as [GitHub Container Registry (ghcr)](https://ghcr.io) to be pulled during deployment.
 
-To change the logging level, set the LOG_LEVEL environment variable:
+To change the logging level, set the `LOG_LEVEL` environment variable:
 ```bash
 LOG_LEVEL=debug manage runserver
 ```
@@ -137,7 +141,6 @@ To deploy the AssetAPI in a container, use
 ENVIRONMENT=dev manage deploy    # Set up ksqlDB streams and topics and deploys the AssetAPI
 ENVIRONMENT=dev manage teardown  # Clean up application resources
 ```
-> **Note:** The Docker image defined in `Settings.state_api_image` must be available locally inside the devcontainer or in a remote registry such as [GitHub Container Registry (ghcr)](https://ghcr.io) to be pulled during deployment.
 
 After the AssetAPI is running, you can stream data from the deployed devices on OpenFactory using:
 ```bash
