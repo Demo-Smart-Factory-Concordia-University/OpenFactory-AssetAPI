@@ -11,7 +11,7 @@
 #   - Compatible with both local and Swarm deployments
 # ------------------------------------------------------------------------------
 
-    FROM python:3.12-slim
+FROM python:3.12-slim
 
 # Arguments for non-root user creation
 ARG UNAME=routing_layer
@@ -30,14 +30,13 @@ RUN apt-get update && apt-get install -y git \
 # Set working directory
 WORKDIR /app
 
-# Install Python dependencies
-COPY requirements.txt .
+# Copy project (including pyproject.toml)
+COPY pyproject.toml README.md /app/
+COPY routing_layer /app/routing_layer
 
+# Install the package using pyproject.toml
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY . routing_layer
+    && pip install --no-cache-dir .
 
 # Change ownership to the non-root user
 RUN chown -R $UNAME:$UNAME /app
